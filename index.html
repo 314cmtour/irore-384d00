@@ -44,7 +44,10 @@
   .backdrop img{width:100%;height:100%;object-fit:cover;object-position:50% 60%;background:none;opacity:.42}
   .hero::after{content:"";position:absolute;inset:0;
     background:linear-gradient(to bottom,rgba(var(--bg-rgb),0) 55%,rgba(var(--bg-rgb),.85))}
-  .mark{position:absolute;left:clamp(20px,5vw,72px);bottom:clamp(24px,6vh,64px);z-index:2}
+  /* 題字：初めは左下。スクロールに合わせて左上へ小さく移り、そこで止まって常に見える（2026-10-16 健さん） */
+  .mark{position:fixed;left:clamp(20px,5vw,72px);bottom:clamp(24px,6vh,64px);z-index:10;transform-origin:0 0;will-change:transform}
+  .mark h1{text-shadow:0 1px 14px rgba(0,0,0,.55)}
+  .mark.stuck{cursor:pointer}
   .mark h1{font-family:var(--sans);font-weight:300;font-size:clamp(28px,4.2vw,56px);letter-spacing:.06em;line-height:1}
   .mark p{font-family:var(--sans);font-size:12px;color:var(--mute);letter-spacing:.2em;margin-top:14px}
   .cue{position:absolute;right:clamp(20px,5vw,72px);bottom:clamp(24px,6vh,64px);z-index:2;
@@ -190,6 +193,28 @@
     if (e.isIntersecting) { v.preload = 'auto'; v.play().catch(() => {}); } else v.pause();
   }), { threshold: .25 });
   document.querySelectorAll('video.loop').forEach(v => vo.observe(v));
+
+  // 題字を左下から左上へ。画面の高さの7割をスクロールするあいだに移し、あとは止めておく
+  const mark = document.querySelector('.mark'), mh1 = mark.querySelector('h1'), msub = mark.querySelector('p');
+  let ticking = false;
+  const place = () => {
+    ticking = false;
+    const vh = innerHeight, p = Math.min(Math.max(scrollY / (vh * .7), 0), 1);
+    const cs = getComputedStyle(mark);
+    const left = parseFloat(cs.left), bottom = parseFloat(cs.bottom);
+    const y0 = vh - bottom - mark.offsetHeight;                 // 初めの上端
+    const gap = Math.max(16, Math.min(28, vh * .03));            // 止まる位置（上端・左端）
+    const sEnd = Math.min(1, 20 / parseFloat(getComputedStyle(mh1).fontSize));  // 止まったときの字の大きさ＝20px
+    const s = 1 - (1 - sEnd) * p;
+    mark.style.transform = `translate(${(Math.min(left, gap) - left) * p}px, ${(gap - y0) * p}px) scale(${s})`;
+    msub.style.opacity = Math.max(0, 1 - p * 1.6);
+    mark.classList.toggle('stuck', p >= 1);
+  };
+  const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(place); } };
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', onScroll);
+  place();
+  mark.addEventListener('click', () => { if (mark.classList.contains('stuck')) scrollTo({ top: 0, behavior: 'smooth' }); });
 
 </script>
 </body>
