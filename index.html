@@ -36,7 +36,12 @@
   /* ── 冒頭：水面だけ ── */
   .hero{position:relative;height:100svh;overflow:hidden}
   .hero video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.92;background:var(--bg)}
-  @media (min-aspect-ratio:1/1){.hero video{object-fit:contain}}  /* 縦長の動画。横長の画面では切らずに中央へ（左右は地の色） */
+  @media (min-aspect-ratio:1/1){.hero video{object-fit:contain;background:transparent}}  /* 縦長の動画。横長の画面では切らずに中央へ（左右は固定した写真が透ける） */
+
+  /* ── 背景：写真 4862 を画面に固定し、中身がその上を流れる（2026-10-16 健さん・大英博物館の型）。
+     iPhone は background-attachment:fixed が効かないので、固定した img で組む ── */
+  .backdrop{position:fixed;inset:0;z-index:-1;pointer-events:none}
+  .backdrop img{width:100%;height:100%;object-fit:cover;object-position:50% 60%;background:none;opacity:.42}
   .hero::after{content:"";position:absolute;inset:0;
     background:linear-gradient(to bottom,rgba(var(--bg-rgb),0) 55%,rgba(var(--bg-rgb),.85))}
   .mark{position:absolute;left:clamp(20px,5vw,72px);bottom:clamp(24px,6vh,64px);z-index:2}
@@ -92,6 +97,7 @@
 </style>
 </head>
 <body>
+<div class="backdrop" aria-hidden="true"><img src="media/p4862.jpg" alt="" decoding="async"></div>
 
 <header class="hero">
   <video src="media/hero.mp4" poster="media/hero-poster.jpg" autoplay muted loop playsinline preload="auto" aria-label="裸電球の下から、光の粒が浮かぶ水面へ、ゆっくり下りていく"></video>
