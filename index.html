@@ -36,19 +36,16 @@
   /* ── 冒頭：水面だけ ── */
   .hero{position:relative;height:100svh;overflow:hidden}
   .hero video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.92;background:var(--bg)}
-  @media (min-aspect-ratio:1/1){.hero video{object-fit:contain;background:transparent}}  /* 縦長の動画。横長の画面では切らずに中央へ（左右は固定した写真が透ける） */
+  @media (min-aspect-ratio:1/1){.hero video{object-fit:contain;background:transparent}}  /* 縦長の動画。横長の画面では切らずに中央へ（左右は地の色） */
 
-  /* ── 背景：写真 4862 を画面に固定し、中身がその上を流れる（2026-10-16 健さん・大英博物館の型）。
-     iPhone は background-attachment:fixed が効かないので、固定した img で組む ── */
-  .backdrop{position:fixed;inset:0;z-index:-1;pointer-events:none}
-  .backdrop img{width:100%;height:100%;object-fit:cover;object-position:50% 60%;background:none;opacity:.9}
-  /* トップの動画の後ろは写真を暗く沈める（左右に透ける分） */
-  .hero{background:rgba(var(--bg-rgb),.6)}
-  /* 窓：何も置かない区間。固定した写真がここで見える */
-  .window{height:90svh}
-  /* 中身は横幅いっぱいの無地の帯に載せ、帯ごと写真の上を流れる（2026-10-16 健さん・大英博物館の型） */
-  main,footer{position:relative;background:var(--bg)}
-  main{display:flow-root;box-shadow:0 -40px 60px -20px rgba(0,0,0,.35)}
+  /* ── 覗き窓の帯（2026-10-16 健さん・大英博物館の型）：横幅いっぱいの細長い帯。帯は流れるが中の写真は止まっている。
+     iPhone でも効くよう、帯を clip-path で切り抜き、中の img を position:fixed にする ── */
+  .strip{position:relative;height:clamp(220px,42svh,480px);clip-path:inset(0);background:var(--bg)}
+  .strip.tall{height:clamp(320px,70svh,820px)}
+  .strip img{position:fixed;inset:0;width:100%;height:100vh;object-fit:cover;background:none;pointer-events:none}
+  /* 帯のすぐ下は見出し（または本文）を寄せ、帯と一緒に上がってくるようにする */
+  .strip + section{padding-top:clamp(36px,6vh,64px)}
+  .strip + section .label{font-size:clamp(26px,3.6vw,44px);color:var(--ink);letter-spacing:.06em;text-transform:none;font-weight:300;margin-bottom:clamp(32px,5vh,56px)}
   .hero::after{content:"";position:absolute;inset:0;
     background:linear-gradient(to bottom,rgba(var(--bg-rgb),0) 55%,rgba(var(--bg-rgb),.85))}
   /* 題字：初めは左下。スクロールに合わせて左上へ小さく移り、そこで止まって常に見える（2026-10-16 健さん） */
@@ -107,7 +104,6 @@
 </style>
 </head>
 <body>
-<div class="backdrop" aria-hidden="true"><img src="media/p4862.jpg" alt="" decoding="async"></div>
 
 <header class="hero">
   <video src="media/hero.mp4" poster="media/hero-poster.jpg" autoplay muted loop playsinline preload="auto" aria-label="裸電球の下から、光の粒が浮かぶ水面へ、ゆっくり下りていく"></video>
@@ -117,10 +113,10 @@
   </div>
   <div class="cue">SCROLL</div>
 </header>
-<div class="window" aria-hidden="true"></div>
 
 <main>
 
+  <div class="strip tall" aria-hidden="true"><img src="media/p4862.jpg" alt="" decoding="async"></div>
   <section class="wrap">
     <div class="statement fade">
       <p>囲炉裏は、火を囲む場所だった。<br>
@@ -154,6 +150,7 @@
     </div>
   </section>
 
+  <div class="strip" aria-hidden="true"><img src="media/p4860.jpg" alt="" loading="lazy" decoding="async"></div>
   <section class="wrap">
     <p class="label">Record</p>
     <figure class="record fade">
@@ -172,6 +169,7 @@
     </div>
   </section>
 
+  <div class="strip" aria-hidden="true"><img src="media/p4886.jpg" alt="" loading="lazy" decoding="async"></div>
   <section class="wrap">
     <p class="label">Data</p>
     <dl class="data fade">
