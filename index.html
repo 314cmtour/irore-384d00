@@ -23,22 +23,22 @@
 -->
 <style>
   :root{
-    --bg:#0b0b0a; --ink:#e8e4dc; --mute:#8b867d; --line:#2a2825;
+    --bg:#141c27; --bg-rgb:20,28,39; --ink:#e8e4dc; --mute:#8b867d; --line:#2a3646;  /* 地は濃紺（2026-10-16 健さん「黒ではなく」） */
     --sans:"Inter",-apple-system,"Helvetica Neue",sans-serif;
     --serif:"Noto Serif JP","Hiragino Mincho ProN",serif;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
   body{font-family:var(--serif);font-weight:300;line-height:2;letter-spacing:.04em}
-  img,video{display:block;width:100%;height:auto;background:#000}
+  img,video{display:block;width:100%;height:auto;background:var(--bg)}
   a{color:inherit}
 
   /* ── 冒頭：水面だけ ── */
   .hero{position:relative;height:100svh;overflow:hidden}
-  .hero video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.92;background:#000}
-  @media (min-aspect-ratio:1/1){.hero video{object-fit:contain}}  /* 縦長の動画。横長の画面では切らずに中央へ */
+  .hero video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.92;background:var(--bg)}
+  @media (min-aspect-ratio:1/1){.hero video{object-fit:contain}}  /* 縦長の動画。横長の画面では切らずに中央へ（左右は地の色） */
   .hero::after{content:"";position:absolute;inset:0;
-    background:linear-gradient(to bottom,rgba(11,11,10,0) 55%,rgba(11,11,10,.85))}
+    background:linear-gradient(to bottom,rgba(var(--bg-rgb),0) 55%,rgba(var(--bg-rgb),.85))}
   .mark{position:absolute;left:clamp(20px,5vw,72px);bottom:clamp(24px,6vh,64px);z-index:2}
   .mark h1{font-family:var(--sans);font-weight:300;font-size:clamp(28px,4.2vw,56px);letter-spacing:.06em;line-height:1}
   .mark p{font-family:var(--sans);font-size:12px;color:var(--mute);letter-spacing:.2em;margin-top:14px}
@@ -63,7 +63,7 @@
   figure figcaption{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.12em;margin-top:14px}
 
   .record{max-width:980px;margin:0 auto}
-  .record video{aspect-ratio:16/9;background:#000}
+  .record video{aspect-ratio:16/9;background:var(--bg)}
 
   .note{max-width:34em;margin-left:clamp(0px,16vw,240px);font-size:15px;color:#c9c4ba}
 
@@ -184,6 +184,7 @@
     if (e.isIntersecting) { v.preload = 'auto'; v.play().catch(() => {}); } else v.pause();
   }), { threshold: .25 });
   document.querySelectorAll('video.loop').forEach(v => vo.observe(v));
+
 </script>
 </body>
 </html>
