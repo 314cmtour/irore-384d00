@@ -41,7 +41,14 @@
   /* ── 背景：写真 4862 を画面に固定し、中身がその上を流れる（2026-10-16 健さん・大英博物館の型）。
      iPhone は background-attachment:fixed が効かないので、固定した img で組む ── */
   .backdrop{position:fixed;inset:0;z-index:-1;pointer-events:none}
-  .backdrop img{width:100%;height:100%;object-fit:cover;object-position:50% 60%;background:none;opacity:.42}
+  .backdrop img{width:100%;height:100%;object-fit:cover;object-position:50% 60%;background:none;opacity:.9}
+  /* トップの動画の後ろは写真を暗く沈める（左右に透ける分） */
+  .hero{background:rgba(var(--bg-rgb),.6)}
+  /* 窓：何も置かない区間。固定した写真がここで見える */
+  .window{height:90svh}
+  /* 中身は横幅いっぱいの無地の帯に載せ、帯ごと写真の上を流れる（2026-10-16 健さん・大英博物館の型） */
+  main,footer{position:relative;background:var(--bg)}
+  main{display:flow-root;box-shadow:0 -40px 60px -20px rgba(0,0,0,.35)}
   .hero::after{content:"";position:absolute;inset:0;
     background:linear-gradient(to bottom,rgba(var(--bg-rgb),0) 55%,rgba(var(--bg-rgb),.85))}
   /* 題字：初めは左下。スクロールに合わせて左上へ小さく移り、そこで止まって常に見える（2026-10-16 健さん） */
@@ -110,6 +117,7 @@
   </div>
   <div class="cue">SCROLL</div>
 </header>
+<div class="window" aria-hidden="true"></div>
 
 <main>
 
