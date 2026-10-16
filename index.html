@@ -23,7 +23,7 @@
 -->
 <style>
   :root{
-    --bg:#201e1b; --bg-rgb:32,30,27; --ink:#e8e4dc; --mute:#8b867d; --line:#3a3631;  /* 地は墨色＝暖かい濃い灰色（2026-10-16 健さん） */
+    --bg:#201e1b; --bg-rgb:32,30,27; --ink:#e8e4dc; --mute:#8b867d; --line:#3a3631; --gap:clamp(120px,26svh,300px);  /* 地は墨色＝暖かい濃い灰色（2026-10-16 健さん） */
     --sans:"Inter",-apple-system,"Helvetica Neue",sans-serif;
     --serif:"Noto Serif JP","Hiragino Mincho ProN",serif;
   }
@@ -36,16 +36,19 @@
   /* ── 冒頭：水面だけ ── */
   .hero{position:relative;height:100svh;overflow:hidden}
   .hero video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.92;background:var(--bg)}
-  @media (min-aspect-ratio:1/1){.hero video{object-fit:contain;background:transparent}}  /* 縦長の動画。横長の画面では切らずに中央へ（左右は地の色） */
+  @media (min-aspect-ratio:1/1){.hero video{object-fit:contain;background:transparent}}  /* 縦長の動画。横長の画面では切らずに中央へ（左右は背景の写真が暗く透ける） */
 
-  /* ── 覗き窓の帯（2026-10-16 健さん・大英博物館の型）：横幅いっぱいの細長い帯。帯は流れるが中の写真は止まっている。
-     iPhone でも効くよう、帯を clip-path で切り抜き、中の img を position:fixed にする ── */
-  .strip{position:relative;height:clamp(220px,42svh,480px);clip-path:inset(0);background:var(--bg)}
-  .strip.tall{height:clamp(320px,70svh,820px)}
-  .strip img{position:fixed;inset:0;width:100%;height:100vh;object-fit:cover;background:none;pointer-events:none}
-  /* 帯のすぐ下は見出し（または本文）を寄せ、帯と一緒に上がってくるようにする */
-  .strip + section{padding-top:clamp(36px,6vh,64px)}
-  .strip + section .label{font-size:clamp(26px,3.6vw,44px);color:var(--ink);letter-spacing:.06em;text-transform:none;font-weight:300;margin-bottom:clamp(32px,5vh,56px)}
+  /* ── 背景：写真 4862 を画面に固定（iPhone でも効くよう固定 img で組む） ── */
+  .backdrop{position:fixed;inset:0;z-index:-1;pointer-events:none}
+  .backdrop img{width:100%;height:100%;object-fit:cover;object-position:50% 60%;background:none}
+  .hero{background:rgba(var(--bg-rgb),.6)}
+  /* ── 区切りの帯（2026-10-16 健さん「写真1枚ごとに区切って、隙間から背景が見えるように」）
+     中身は写真1枚ごと・段落ごとに横幅いっぱいの墨色の帯に載せ、帯と帯の隙間から止まった背景が見える ── */
+  main{padding-top:var(--gap)}
+  .band{background:var(--bg);padding:clamp(56px,9vh,112px) 0}
+  .band.photo{padding:clamp(28px,5vh,64px) 0}
+  .band + .band{margin-top:var(--gap)}
+  .label{font-size:clamp(26px,3.6vw,44px);color:var(--ink);letter-spacing:.06em;text-transform:none;font-weight:300;margin-bottom:clamp(32px,5vh,56px)}
   .hero::after{content:"";position:absolute;inset:0;
     background:linear-gradient(to bottom,rgba(var(--bg-rgb),0) 55%,rgba(var(--bg-rgb),.85))}
   /* 題字：初めは左下。スクロールに合わせて左上へ小さく移り、そこで止まって常に見える（2026-10-16 健さん） */
@@ -85,7 +88,7 @@
   dl.data dt{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.2em;padding-top:4px}
   dl.data dd{border-bottom:1px solid var(--line);padding-bottom:18px}
 
-  footer{padding:80px 0 56px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.2em}
+  footer{padding:80px 0 56px !important;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.2em}
 
   /* ── 静かに現れる ── */
   .fade{opacity:0;transform:translateY(16px);transition:opacity 1.4s ease,transform 1.4s ease}
@@ -104,6 +107,7 @@
 </style>
 </head>
 <body>
+<div class="backdrop" aria-hidden="true"><img src="media/p4862.jpg" alt="" decoding="async"></div>
 
 <header class="hero">
   <video src="media/hero.mp4" poster="media/hero-poster.jpg" autoplay muted loop playsinline preload="auto" aria-label="裸電球の下から、光の粒が浮かぶ水面へ、ゆっくり下りていく"></video>
@@ -116,61 +120,82 @@
 
 <main>
 
-  <div class="strip tall" aria-hidden="true"><img src="media/p4862.jpg" alt="" decoding="async"></div>
-  <section class="wrap">
+  <section class="band"><div class="wrap">
     <div class="statement fade">
       <p>囲炉裏は、火を囲む場所だった。<br>
       諏訪の湖のほとりは、水の恵みによって育ってきたまちである。</p>
       <p>この作品は、火の代わりに水を囲む。炉に張った水が発光し、水底から言葉が不規則に浮かび上がっては、音と光になって、また水に還る。</p>
       <p>受け取ってきた水の恵みと、これから水とどう向き合うのか。ただ囲んで、めいめいの思いを。</p>
     </div>
-  </section>
+  </div></section>
 
-  <section class="wrap">
-    <div class="seq">
+  <section class="band photo"><div class="wrap">
       <figure class="full fade"><img src="media/p4862.jpg" alt="暗い納戸の奥、裸電球の下で青く光る囲炉裏" loading="lazy"></figure>
+  </div></section>
+
+  <section class="band photo"><div class="wrap">
       <figure class="r60 fade"><img src="media/p4860.jpg" alt="上から見下ろした囲炉裏と、吊るされた裸電球" loading="lazy"></figure>
+  </div></section>
+
+  <section class="band photo"><div class="wrap">
       <figure class="l60 fade"><img src="media/p4865.jpg" alt="囲炉裏を覗き込み、水面に手をかざす人" loading="lazy"></figure>
+  </div></section>
+
+  <section class="band photo"><div class="wrap">
       <figure class="full fade">
         <video src="media/ceiling.mp4" poster="media/ceiling-poster.jpg" muted loop playsinline preload="none" class="loop" aria-label="天井に映る水の揺らぎ"></video>
       </figure>
+  </div></section>
+
+  <section class="band photo"><div class="wrap">
       <figure class="r60 fade"><img src="media/p4868.jpg" alt="水面の上に伸ばされた手" loading="lazy"></figure>
+  </div></section>
+
+  <section class="band photo"><div class="wrap">
       <figure class="l60 fade"><img src="media/p4876.jpg" alt="囲炉裏の縁に立ち、水面を見つめる人" loading="lazy"></figure>
-      <div class="pair fade">
-        <figure><img src="media/p4886.jpg" alt="水面の寄り。光の粒" loading="lazy"></figure>
-        <figure><img src="media/p4887.jpg" alt="水面の寄り。滲む光" loading="lazy"></figure>
-      </div>
+  </div></section>
+
+  <section class="band photo"><div class="wrap">
+      <figure class="l60 fade"><img src="media/p4886.jpg" alt="水面の寄り。光の粒" loading="lazy"></figure>
+  </div></section>
+
+  <section class="band photo"><div class="wrap">
+      <figure class="r60 fade"><img src="media/p4887.jpg" alt="水面の寄り。滲む光" loading="lazy"></figure>
+  </div></section>
+
+  <section class="band photo"><div class="wrap">
       <figure class="c40 fade">
         <video src="media/bulb.mp4" poster="media/bulb-poster.jpg" muted loop playsinline preload="none" class="loop" aria-label="裸電球と、天井に揺れる水の光"></video>
       </figure>
-      <div class="pair fade">
-        <figure><img src="media/p4889.jpg" alt="水底から浮かび上がる言葉のかけら" loading="lazy"></figure>
-        <figure><img src="media/p4891.jpg" alt="水底から浮かび上がる言葉のかけら" loading="lazy"></figure>
-      </div>
-    </div>
-  </section>
+  </div></section>
 
-  <div class="strip" aria-hidden="true"><img src="media/p4860.jpg" alt="" loading="lazy" decoding="async"></div>
-  <section class="wrap">
+  <section class="band photo"><div class="wrap">
+      <figure class="l60 fade"><img src="media/p4889.jpg" alt="水底から浮かび上がる言葉のかけら" loading="lazy"></figure>
+  </div></section>
+
+  <section class="band photo"><div class="wrap">
+      <figure class="r60 fade"><img src="media/p4891.jpg" alt="水底から浮かび上がる言葉のかけら" loading="lazy"></figure>
+  </div></section>
+
+  <section class="band"><div class="wrap">
     <p class="label">Record</p>
     <figure class="record fade">
       <video src="media/record.mp4" poster="media/record-poster.jpg" controls playsinline preload="none"></video>
       <figcaption>記録映像　0:57　音声あり</figcaption>
     </figure>
-  </section>
+  </div></section>
 
-  <section class="wrap">
+  <section class="band photo"><div class="wrap">
     <figure class="c40 fade"><img src="media/p4892.jpg" alt="闇に浮かぶ、発光する水面" loading="lazy"></figure>
-  </section>
+  </div></section>
 
-  <section class="wrap">
+  <section class="band"><div class="wrap">
     <div class="note fade">
       <p>iro:re（イロリ）という名には、色（iro）を継ぎ足す（re）＝囲炉裏、という置き換えを最初から埋め込んでいます。岡谷は、諏訪湖の水がただ一筋、天竜川となって流れ出す源流のまちです。</p>
     </div>
-  </section>
+  </div></section>
 
-  <div class="strip" aria-hidden="true"><img src="media/p4886.jpg" alt="" loading="lazy" decoding="async"></div>
-  <section class="wrap">
+  <section class="band"><div class="wrap">
     <p class="label">Data</p>
     <dl class="data fade">
       <dt>作品名</dt><dd>iro:re（イロリ）</dd>
@@ -181,11 +206,11 @@
       <dt>音楽</dt><dd>宮澤 玲</dd>
       <dt>展示</dt><dd>BEN-TEN｜諏訪ノ湖芸術祭2026<br>カネイチ・プロジェクト「みえないかたち」展<br>カネイチビル（長野県岡谷市）　2026.9.26 – 10.25</dd>
     </dl>
-  </section>
+  </div></section>
 
 </main>
 
-<footer class="wrap">© 2026 Ken Miyazawa</footer>
+<footer class="band foot"><div class="wrap">© 2026 Ken Miyazawa</div></footer>
 
 <script>
   // 画面に入ったものだけを静かに現し、繰り返し動画は見えている間だけ再生する（CPUと通信を節約）
