@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:,">
+<title>iro:re — 宮澤 健</title>
+<meta name="description" content="iro:re（イロリ）。火の代わりに水を囲む、光と音のインスタレーション。宮澤 健, 2026.">
+<meta property="og:title" content="iro:re — 宮澤 健">
+<meta property="og:description" content="火の代わりに水を囲む、光と音のインスタレーション。">
+<meta property="og:image" content="media/p4892.jpg">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400&family=Noto+Serif+JP:wght@300;400&display=swap" rel="stylesheet">
+<!--
+  iro:re 作品サイト（やまなしメディア芸術アワード2026-27 応募用・2026-10-15）
+  ★素材は 2027/撮影素材（4K ProRes）から書き出し。原本は git に入れない。
+  ★文章は作家本人の言葉だけを使う（150字キャプション＝2026-09-13決定／作品名の由来＝カネイチ応募書類）。
+  ★動画は音なしで繰り返す断片3本と、音つきで見る記録1本。自動再生は音なしのものだけ。
+-->
+<style>
+  :root{
+    --bg:#0b0b0a; --ink:#e8e4dc; --mute:#8b867d; --line:#2a2825;
+    --sans:"Inter",-apple-system,"Helvetica Neue",sans-serif;
+    --serif:"Noto Serif JP","Hiragino Mincho ProN",serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  body{font-family:var(--serif);font-weight:300;line-height:2;letter-spacing:.04em}
+  img,video{display:block;width:100%;height:auto;background:#000}
+  a{color:inherit}
+
+  /* ── 冒頭：水面だけ ── */
+  .hero{position:relative;height:100svh;overflow:hidden}
+  .hero video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.92}
+  .hero::after{content:"";position:absolute;inset:0;
+    background:linear-gradient(to bottom,rgba(11,11,10,0) 55%,rgba(11,11,10,.85))}
+  .mark{position:absolute;left:clamp(20px,5vw,72px);bottom:clamp(24px,6vh,64px);z-index:2}
+  .mark h1{font-family:var(--sans);font-weight:300;font-size:clamp(28px,4.2vw,56px);letter-spacing:.06em;line-height:1}
+  .mark p{font-family:var(--sans);font-size:12px;color:var(--mute);letter-spacing:.2em;margin-top:14px}
+  .cue{position:absolute;right:clamp(20px,5vw,72px);bottom:clamp(24px,6vh,64px);z-index:2;
+    font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.3em;writing-mode:vertical-rl}
+
+  /* ── 本文 ── */
+  .wrap{width:min(1200px,100% - 40px);margin:0 auto}
+  section{padding:clamp(96px,16vh,200px) 0}
+  .label{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.3em;text-transform:uppercase;margin-bottom:40px}
+
+  .statement{max-width:30em;margin-left:clamp(0px,16vw,240px);font-size:clamp(16px,1.5vw,19px)}
+  .statement p+p{margin-top:2em}
+
+  /* ── 写真と映像の並び ── */
+  .seq{display:grid;gap:clamp(72px,12vh,160px)}
+  .full{width:100%}
+  .l60{width:min(62%,760px)}
+  .r60{width:min(62%,760px);margin-left:auto}
+  .c40{width:min(40%,460px);margin:0 auto}
+  .pair{display:grid;grid-template-columns:1fr 1fr;gap:clamp(12px,2vw,28px)}
+  figure figcaption{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.12em;margin-top:14px}
+
+  .record{max-width:980px;margin:0 auto}
+  .record video{aspect-ratio:16/9;background:#000}
+
+  .note{max-width:34em;margin-left:clamp(0px,16vw,240px);font-size:15px;color:#c9c4ba}
+
+  /* ── 作品データ ── */
+  dl.data{display:grid;grid-template-columns:9em 1fr;row-gap:18px;column-gap:24px;
+    max-width:44em;margin-left:clamp(0px,16vw,240px);font-size:14px;line-height:1.9}
+  dl.data dt{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.2em;padding-top:4px}
+  dl.data dd{border-bottom:1px solid var(--line);padding-bottom:18px}
+
+  footer{padding:80px 0 56px;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.2em}
+
+  /* ── 静かに現れる ── */
+  .fade{opacity:0;transform:translateY(16px);transition:opacity 1.4s ease,transform 1.4s ease}
+  .fade.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){.fade{opacity:1;transform:none;transition:none}}
+
+  @media (max-width:720px){
+    .l60,.r60{width:100%}
+    .c40{width:72%}
+    .pair{grid-template-columns:1fr}
+    .statement,.note,dl.data{margin-left:0}
+    dl.data{grid-template-columns:1fr;row-gap:6px}
+    dl.data dd{margin-bottom:14px}
+    .cue{display:none}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <video src="media/hero.mp4" poster="media/hero-poster.jpg" autoplay muted loop playsinline preload="auto" aria-label="発光する水面に、光の粒が浮かんでは沈む"></video>
+  <div class="mark">
+    <h1>iro:re</h1>
+    <p>イロリ　／　宮澤 健　2026</p>
+  </div>
+  <div class="cue">SCROLL</div>
+</header>
+
+<main>
+
+  <section class="wrap">
+    <div class="statement fade">
+      <p>囲炉裏は、火を囲む場所だった。<br>
+      諏訪の湖のほとりは、水の恵みによって育ってきたまちである。</p>
+      <p>この作品は、火の代わりに水を囲む。炉に張った水が発光し、水底から言葉が不規則に浮かび上がっては、音と光になって、また水に還る。</p>
+      <p>受け取ってきた水の恵みと、これから水とどう向き合うのか。ただ囲んで、めいめいの思いを。</p>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <div class="seq">
+      <figure class="full fade"><img src="media/p4862.jpg" alt="暗い納戸の奥、裸電球の下で青く光る囲炉裏" loading="lazy"></figure>
+      <figure class="r60 fade"><img src="media/p4860.jpg" alt="上から見下ろした囲炉裏と、吊るされた裸電球" loading="lazy"></figure>
+      <figure class="l60 fade"><img src="media/p4865.jpg" alt="囲炉裏を覗き込み、水面に手をかざす人" loading="lazy"></figure>
+      <figure class="full fade">
+        <video src="media/ceiling.mp4" poster="media/ceiling-poster.jpg" muted loop playsinline preload="none" class="loop" aria-label="天井に映る水の揺らぎ"></video>
+      </figure>
+      <figure class="r60 fade"><img src="media/p4868.jpg" alt="水面の上に伸ばされた手" loading="lazy"></figure>
+      <figure class="l60 fade"><img src="media/p4876.jpg" alt="囲炉裏の縁に立ち、水面を見つめる人" loading="lazy"></figure>
+      <div class="pair fade">
+        <figure><img src="media/p4886.jpg" alt="水面の寄り。光の粒" loading="lazy"></figure>
+        <figure><img src="media/p4887.jpg" alt="水面の寄り。滲む光" loading="lazy"></figure>
+      </div>
+      <figure class="c40 fade">
+        <video src="media/bulb.mp4" poster="media/bulb-poster.jpg" muted loop playsinline preload="none" class="loop" aria-label="裸電球と、天井に揺れる水の光"></video>
+      </figure>
+      <div class="pair fade">
+        <figure><img src="media/p4889.jpg" alt="水底から浮かび上がる言葉のかけら" loading="lazy"></figure>
+        <figure><img src="media/p4891.jpg" alt="水底から浮かび上がる言葉のかけら" loading="lazy"></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <p class="label">Record</p>
+    <figure class="record fade">
+      <video src="media/record.mp4" poster="media/record-poster.jpg" controls playsinline preload="none"></video>
+      <figcaption>記録映像　0:57　音声あり</figcaption>
+    </figure>
+  </section>
+
+  <section class="wrap">
+    <figure class="c40 fade"><img src="media/p4892.jpg" alt="闇に浮かぶ、発光する水面" loading="lazy"></figure>
+  </section>
+
+  <section class="wrap">
+    <div class="note fade">
+      <p>iro:re（イロリ）という名には、色（iro）を継ぎ足す（re）＝囲炉裏、という置き換えを最初から埋め込んでいます。岡谷は、諏訪湖の水がただ一筋、天竜川となって流れ出す源流のまちです。</p>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <p class="label">Data</p>
+    <dl class="data fade">
+      <dt>作品名</dt><dd>iro:re（イロリ）</dd>
+      <dt>制作年</dt><dd>2026</dd>
+      <dt>素材</dt><dd>ミクストメディア（木、水、映像、音）<br>映像・音はリアルタイム生成（自作ソフトウェア）</dd>
+      <dt>サイズ</dt><dd>900 × 900 × H800 mm（囲炉裏台）<br>アクリル水槽 500 × 500 × H50 mm</dd>
+      <dt>作</dt><dd>宮澤 健</dd>
+      <dt>音楽</dt><dd>宮澤 玲</dd>
+      <dt>展示</dt><dd>BEN-TEN｜諏訪ノ湖芸術祭2026<br>カネイチ・プロジェクト「みえないかたち」展<br>カネイチビル（長野県岡谷市）　2026.9.26 – 10.25</dd>
+    </dl>
+  </section>
+
+</main>
+
+<footer class="wrap">© 2026 Ken Miyazawa</footer>
+
+<script>
+  // 画面に入ったものだけを静かに現し、繰り返し動画は見えている間だけ再生する（CPUと通信を節約）
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) e.target.classList.add('in');
+  }), { threshold: .12 });
+  document.querySelectorAll('.fade').forEach(el => io.observe(el));
+
+  const vo = new IntersectionObserver(es => es.forEach(e => {
+    const v = e.target;
+    if (e.isIntersecting) { v.preload = 'auto'; v.play().catch(() => {}); } else v.pause();
+  }), { threshold: .25 });
+  document.querySelectorAll('video.loop').forEach(v => vo.observe(v));
+</script>
+</body>
+</html>
