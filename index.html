@@ -19,6 +19,7 @@
   ★素材は 2027/撮影素材（4K ProRes）から書き出し。原本は git に入れない。
   ★文章は作家本人の言葉だけを使う（150字キャプション＝2026-09-13決定／作品名の由来＝カネイチ応募書類）。
   ★動画は音なしで繰り返す断片3本と、音つきで見る記録1本。自動再生は音なしのものだけ。
+  ★トップ（hero）は 2026-10-16 に 2027/インスタグラム/上下パン.mp4（縦 1080×1920・55秒）へ差し替え。音は落として書き出し。
 -->
 <style>
   :root{
@@ -34,7 +35,8 @@
 
   /* ── 冒頭：水面だけ ── */
   .hero{position:relative;height:100svh;overflow:hidden}
-  .hero video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.92}
+  .hero video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.92;background:#000}
+  @media (min-aspect-ratio:1/1){.hero video{object-fit:contain}}  /* 縦長の動画。横長の画面では切らずに中央へ */
   .hero::after{content:"";position:absolute;inset:0;
     background:linear-gradient(to bottom,rgba(11,11,10,0) 55%,rgba(11,11,10,.85))}
   .mark{position:absolute;left:clamp(20px,5vw,72px);bottom:clamp(24px,6vh,64px);z-index:2}
@@ -92,7 +94,7 @@
 <body>
 
 <header class="hero">
-  <video src="media/hero.mp4" poster="media/hero-poster.jpg" autoplay muted loop playsinline preload="auto" aria-label="発光する水面に、光の粒が浮かんでは沈む"></video>
+  <video src="media/hero.mp4" poster="media/hero-poster.jpg" autoplay muted loop playsinline preload="auto" aria-label="裸電球の下から、光の粒が浮かぶ水面へ、ゆっくり下りていく"></video>
   <div class="mark">
     <h1>iro:re</h1>
     <p>イロリ　／　宮澤 健　2026</p>
