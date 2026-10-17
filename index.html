@@ -97,8 +97,22 @@
   .pair{display:grid;grid-template-columns:1fr 1fr;gap:clamp(12px,2vw,28px)}
   figure figcaption{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.12em;margin-top:14px}
 
-  .record{max-width:980px;margin:0 auto}
-  .record video{aspect-ratio:16/9;background:var(--bg)}
+  /* ティーザー：再生と全画面のミニマルな印（2026-10-18）。重なりはタップを素通しにする */
+  .teaser{max-width:980px;margin:0 auto}
+  .vbox{position:relative;aspect-ratio:16/9;background:#000;overflow:hidden}
+  .vbox video{display:block;width:100%;height:100%;object-fit:cover}
+  .vbox::after{content:"";position:absolute;inset:0;pointer-events:none;transition:opacity .4s;
+    background:linear-gradient(to top,rgba(0,0,0,.45),rgba(0,0,0,0) 35%)}
+  .vplay,.vfull{position:absolute;z-index:2;border:0;background:none;padding:0;cursor:pointer;color:#fff;opacity:.8;transition:opacity .3s,transform .3s}
+  .vplay{inset:0;margin:auto;width:clamp(52px,7vw,72px);height:clamp(52px,7vw,72px)}
+  .vplay svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1}
+  .vplay path{fill:currentColor;stroke:none}
+  .vfull{right:10px;bottom:8px;width:40px;height:40px;padding:10px}
+  .vfull svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.3}
+  .vplay:hover,.vfull:hover{opacity:1}
+  .vplay:hover{transform:scale(1.04)}
+  .vmeta{position:absolute;z-index:2;left:16px;bottom:16px;font-family:var(--sans);font-size:10px;letter-spacing:.3em;color:#fff;opacity:.75;pointer-events:none;transition:opacity .3s}
+  .vbox.playing .vplay,.vbox.playing .vfull,.vbox.playing .vmeta,.vbox.playing::after{opacity:0;pointer-events:none}
 
   .note{max-width:34em;margin-left:clamp(0px,16vw,240px);font-size:15px;color:#c9c4ba}
 
@@ -146,6 +160,18 @@
       <p>この作品は、火の代わりに水を囲む。炉に張った水が発光し、水底から言葉が不規則に浮かび上がっては、音と光になって、また水に還る。</p>
       <p>受け取ってきた水の恵みと、これから水とどう向き合うのか。ただ囲んで、めいめいの思いを。</p>
     </div>
+  </div></section>
+
+  <section class="band"><div class="wrap">
+    <figure class="teaser fade">
+      <div class="vbox">
+        <video src="media/teaser.mp4" poster="media/teaser-poster.jpg" playsinline preload="metadata"></video>
+        <button class="vplay" type="button" aria-label="ティーザーを再生"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="31"/><path d="M27 22 L44 32 L27 42 Z"/></svg></button>
+        <span class="vmeta">TEASER　2:53</span>
+        <button class="vfull" type="button" aria-label="全画面で再生"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9V3h6M15 3h6v6M21 15v6h-6M9 21H3v-6"/></svg></button>
+      </div>
+      <figcaption>ティーザー　2:53　音声あり</figcaption>
+    </figure>
   </div></section>
 
   <section class="band"><div class="wrap">
@@ -198,14 +224,6 @@
 
   <section class="band photo"><div class="wrap">
       <figure class="r60 fade"><img src="media/ph7.jpg" alt="緑に濁った水面" loading="lazy"></figure>
-  </div></section>
-
-  <section class="band"><div class="wrap">
-    <p class="label">Record</p>
-    <figure class="record fade">
-      <video src="media/teaser.mp4" poster="media/teaser-poster.jpg" controls playsinline preload="none"></video>
-      <figcaption>ティーザー　3:03　音声あり</figcaption>
-    </figure>
   </div></section>
 
   <section class="band photo"><div class="wrap">
@@ -274,6 +292,24 @@
   place();
   mark.addEventListener('click', () => { if (mark.classList.contains('stuck')) scrollTo({ top: 0, behavior: 'smooth' }); });
 
+</script>
+<script>
+/* ティーザー：▶でその場で再生、四隅の印で全画面（iPhone は webkitEnterFullscreen） */
+(() => {
+  const box = document.querySelector('.vbox'); if (!box) return;
+  const v = box.querySelector('video');
+  const start = () => { v.controls = true; const p = v.play(); if (p) p.catch(() => {}); };
+  box.querySelector('.vplay').addEventListener('click', start);
+  box.querySelector('.vfull').addEventListener('click', () => {
+    start();
+    try {
+      if (v.requestFullscreen) v.requestFullscreen().catch(() => {});
+      else if (v.webkitEnterFullscreen) v.webkitEnterFullscreen();
+    } catch (e) {}
+  });
+  v.addEventListener('play', () => box.classList.add('playing'));
+  v.addEventListener('ended', () => { box.classList.remove('playing'); v.controls = false; });
+})();
 </script>
 </body>
 </html>
