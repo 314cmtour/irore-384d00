@@ -72,8 +72,13 @@
   .mark.stuck{cursor:pointer}
   .mark h1{font-family:var(--sans);font-weight:300;font-size:clamp(28px,4.2vw,56px);letter-spacing:.06em;line-height:1}
   .mark p{font-family:var(--sans);font-size:12px;color:var(--mute);letter-spacing:.2em;margin-top:14px}
-  .cue{position:absolute;right:clamp(20px,5vw,72px);bottom:clamp(24px,6vh,64px);z-index:2;
-    font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.3em;writing-mode:vertical-rl}
+  .cue{position:absolute;right:clamp(20px,5vw,72px);bottom:clamp(24px,6vh,64px);z-index:2;pointer-events:none;
+    display:flex;flex-direction:column;align-items:center;gap:16px;
+    font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.3em}
+  .cue span{writing-mode:vertical-rl}
+  .cue i{width:7px;height:7px;border-right:1px solid currentColor;border-bottom:1px solid currentColor;opacity:.7;transform:rotate(45deg);animation:cuebob 2.4s ease-in-out infinite}
+  @keyframes cuebob{0%,100%{transform:translateY(0) rotate(45deg)}50%{transform:translateY(5px) rotate(45deg)}}
+  @media (prefers-reduced-motion:reduce){.cue i{animation:none}}
 
   /* ── 本文 ── */
   .wrap{width:min(1200px,100% - 40px);margin:0 auto}
@@ -117,7 +122,6 @@
     .statement,.note,.concept,dl.data{margin-left:0}
     dl.data{grid-template-columns:1fr;row-gap:6px}
     dl.data dd{margin-bottom:14px}
-    .cue{display:none}
   }
 </style>
 </head>
@@ -130,7 +134,7 @@
     <h1>iro:re</h1>
     <p>イロリ　／　宮澤 健　2026</p>
   </div>
-  <div class="cue">SCROLL</div>
+  <div class="cue"><span>SCROLL</span><i></i></div>
 </header>
 
 <main>
