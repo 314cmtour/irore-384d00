@@ -64,7 +64,7 @@
   .concept p+p{margin-top:1.8em}
   .band.photo{padding:clamp(28px,5vh,64px) 0}
   .band + .band{margin-top:var(--gap)}
-  .hero::after{content:"";position:absolute;inset:0;
+  .hero::after{content:"";position:absolute;inset:0;pointer-events:none;  /* タップを下の動画へ通す（iPhone で再生ボタンが反応しない件・2026-10-17） */
     background:linear-gradient(to bottom,rgba(var(--bg-rgb),0) 55%,rgba(var(--bg-rgb),.85))}
   /* 題字：初めは左下。スクロールに合わせて左上へ小さく移り、そこで止まって常に見える（2026-10-16 健さん） */
   .mark{position:fixed;left:clamp(20px,5vw,72px);bottom:clamp(24px,6vh,64px);z-index:10;transform-origin:0 0;will-change:transform}
