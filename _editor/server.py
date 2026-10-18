@@ -111,6 +111,12 @@ class H(SimpleHTTPRequestHandler):
             self.path = "/_editor/editor.html"
         elif path == "/api/content":
             return self._json(200, json.loads((ROOT / "content.json").read_text(encoding="utf-8")))
+        elif path == "/api/token":
+            # ブックマークから開いたとき用。同じ画面（127.0.0.1:8490）からの読み取りだけに渡す
+            # （他のサイトからは、ブラウザの決まりで中身を読めない／Host 確認で DNS の付け替えも止まる）
+            if self.headers.get("Sec-Fetch-Site", "same-origin") not in ("same-origin", "none"):
+                return self._json(403, {"ok": False})
+            return self._json(200, {"token": TOKEN})
         elif path == "/api/status":
             _, out = run(["git", "status", "--short", "--", "content.json", "index.html", "media"])
             _, ahead = run(["git", "rev-list", "--count", "@{u}..HEAD"])
@@ -190,7 +196,7 @@ def main():
         print("git が見つかりません"); sys.exit(1)
     srv = ThreadingHTTPServer(("127.0.0.1", PORT), H)
     url = f"http://127.0.0.1:{PORT}/#{TOKEN}"
-    print(f"編集室を開きました。ブラウザが開かないときは、次をブラウザに貼ってください:\n{url}\nこのウィンドウを閉じると編集室も閉じます。", flush=True)
+    print(f"{time.strftime('%Y-%m-%d %H:%M')} 編集室を起動しました: http://127.0.0.1:{PORT}/", flush=True)
     if "--no-browser" not in sys.argv:
         threading.Timer(0.6, lambda: webbrowser.open(url)).start()
     try:

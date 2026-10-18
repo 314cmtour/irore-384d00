@@ -61,7 +61,7 @@
   // 合言葉は編集室を開いたときの URL の # に付いてくる。タブを開いている間だけ覚えておく
   const h = location.hash.slice(1);
   if (h) { sessionStorage.setItem('irore-token', h); history.replaceState(null, '', location.pathname); }
-  const TOKEN = sessionStorage.getItem('irore-token') || '';
+  let TOKEN = sessionStorage.getItem('irore-token') || '';
 
   const app = document.getElementById('app');
   const stateEl = document.getElementById('state');
@@ -215,6 +215,7 @@
   addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
 
   (async () => {
+    if (!TOKEN) { try { TOKEN = (await (await fetch('/api/token')).json()).token || ''; sessionStorage.setItem('irore-token', TOKEN); } catch (e) {} }
     if (!TOKEN) { app.replaceChildren(el('div', { id: 'block-msg' }, '「編集室.command」から開き直してください。')); stateEl.textContent = ''; return; }
     try {
       C = await (await fetch('/api/content')).json();
