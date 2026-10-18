@@ -52,7 +52,9 @@ SERVER_SIG = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()   # 動い�
 def validate(c):
     assert isinstance(c, dict) and isinstance(c.get("blocks"), list), "形が違います"
     for b in c["blocks"]:
-        assert b.get("type") in ("text", "photo", "video", "teaser", "data", "gallery"), f"知らない種類: {b.get('type')}"
+        assert b.get("type") in ("text", "photo", "video", "teaser", "data", "gallery", "words"), f"知らない種類: {b.get('type')}"
+        if b["type"] == "words":
+            assert isinstance(b.get("groups"), list) and all(isinstance(g.get("words", []), list) for g in b["groups"]), "言葉の一覧の形が違います"
         if b["type"] == "gallery":
             assert isinstance(b.get("items"), list) and b["items"], "まとまりに写真がありません"
             for it in b["items"]:

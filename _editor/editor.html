@@ -95,7 +95,7 @@
 
   const LAYOUT = { full: '全幅', r60: '右寄せ（大）', l60: '左寄せ（大）', c40: '中央（小）' };
   const STYLE = { statement: 'はじめの文（大きめ）', concept: '本文（Concept など）', note: '注記（小さめ）' };
-  const KIND = { text: '文章', photo: '写真', gallery: '写真のまとまり（1つの帯）', video: '動画（ループ）', teaser: 'ティーザー（YouTube）', data: '作品データ' };
+  const KIND = { text: '文章', photo: '写真', gallery: '写真のまとまり（1つの帯）', words: '言葉の一覧', video: '動画（ループ）', teaser: 'ティーザー（YouTube）', data: '作品データ' };
 
   const toast = (msg, err) => { const t = document.getElementById('toast'); t.textContent = msg; t.className = err ? 'err' : ''; t.style.display = 'block'; clearTimeout(t._h); t._h = setTimeout(() => t.style.display = 'none', err ? 9000 : 3500); };
   let VER = sessionStorage.getItem('irore-ver') || 'live', VERS = [];
@@ -219,6 +219,23 @@
         el('div', {}, field(b, 'youtube', 'YouTube の動画 ID（youtu.be/ の後ろの11文字）'), field(b, 'meta', '動画の上の小さな文字（例：TEASER　3:03）'),
           field(b, 'caption', 'キャプション'), field(b, 'alt', '表紙の画像の説明（読み上げ用）'))));
       dropTarget(c, replace);
+    }
+    if (b.type === 'words') {
+      const box = el('div');
+      const draw = () => box.replaceChildren(...b.groups.map((g, j) => {
+        const name = el('input', { type: 'text', placeholder: 'まとまりの名前（例：きれいな言葉　17）' }); name.value = g.name || '';
+        name.addEventListener('input', () => { g.name = name.value; setDirty(true); });
+        const ws = el('textarea', { placeholder: '言葉を、空白か改行で区切って並べる' }); ws.value = (g.words || []).join('　');
+        ws.addEventListener('input', () => { g.words = ws.value.split(/[\s、,，]+/).filter(Boolean); setDirty(true); });
+        return el('div', { style: 'border-top:1px solid var(--line);padding-top:10px;margin-top:10px' },
+          el('div', { class: 'head' }, el('span', { class: 'hint' }, `まとまり ${j + 1}`), el('button', { class: 'small', onclick: () => { b.groups.splice(j, 1); setDirty(true); draw(); } }, '× このまとまりを外す')),
+          name, ws);
+      }));
+      draw();
+      c.append(field(b, 'label', '見出し'), box,
+        el('button', { class: 'small', style: 'margin-top:8px', onclick: () => { b.groups.push({ name: '', words: [] }); setDirty(true); draw(); } }, '＋ まとまり'),
+        field(b, 'caption', '一覧の下の一言（空なら出さない）', { multi: true }),
+        el('div', { class: 'hint' }, '言葉は空白（全角・半角）か改行で区切ります。PC では横に、スマホでは縦に並びます。'));
     }
     if (b.type === 'data') {
       const rows = el('div');

@@ -62,6 +62,16 @@ def render_block(b):
             '      </div>\n'
             + (f'      <figcaption>{t(b["caption"])}</figcaption>\n' if b.get("caption", "").strip() else "")
             + '    </figure>\n')
+    if k == "words":
+        # 作品が水面に浮かべる言葉の一覧（まとまりごと）。言葉は1語ずつ span で並べる
+        label = f'    <p class="label">{t(b["label"])}</p>\n' if b.get("label") else ""
+        gs = ""
+        for g in b["groups"]:
+            ws = "".join(f"<span>{t(w)}</span>" for w in g.get("words", []) if w.strip())
+            if ws or g.get("name", "").strip():
+                gs += f'      <div class="wg">\n        <p class="wh">{t(g.get("name", ""))}</p>\n        <p class="wl">{ws}</p>\n      </div>\n'
+        cap = f'    <p class="wcap">{t(b["caption"])}</p>\n' if b.get("caption", "").strip() else ""
+        return section(f'{label}    <div class="words fade">\n{gs}    </div>\n{cap}')
     if k == "data":
         label = f'    <p class="label">{t(b["label"])}</p>\n' if b.get("label") else ""
         rows = "".join(f'      <dt>{t(r["k"])}</dt><dd>{dd(r["v"])}</dd>\n' for r in b["rows"] if r["k"].strip())

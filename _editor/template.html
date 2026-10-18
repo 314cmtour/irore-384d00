@@ -122,6 +122,12 @@
 
   .note{max-width:34em;margin-left:clamp(0px,16vw,240px);font-size:15px;color:#c9c4ba}
 
+  /* ── 言葉（作品が水面に浮かべる言葉の一覧・2026-10-19） ── */
+  .words{display:grid;grid-template-columns:2fr 1fr 1fr;gap:36px 48px;max-width:46em;margin-left:clamp(0px,16vw,240px)}
+  .wh{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.2em;margin-bottom:16px}
+  .wl{display:flex;flex-wrap:wrap;gap:.5em 1.5em;font-size:17px;letter-spacing:.14em;line-height:1.9}
+  .wcap{max-width:34em;margin:36px 0 0 clamp(0px,16vw,240px);font-size:13px;color:var(--mute)}
+
   /* ── 作品データ ── */
   dl.data{display:grid;grid-template-columns:9em 1fr;row-gap:18px;column-gap:24px;
     max-width:44em;margin-left:clamp(0px,16vw,240px);font-size:14px;line-height:1.9}
@@ -139,7 +145,8 @@
     .l60,.r60{width:100%}
     .c40{width:72%}
     .pair{grid-template-columns:1fr}
-    .statement,.note,.concept,dl.data{margin-left:0}
+    .statement,.note,.concept,dl.data,.words,.wcap{margin-left:0}
+    .words{grid-template-columns:1fr;gap:28px}
     dl.data{grid-template-columns:1fr;row-gap:6px}
     dl.data dd{margin-bottom:14px}
   }
