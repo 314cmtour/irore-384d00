@@ -44,7 +44,9 @@ def render_block(b):
     if k == "video":
         lay = b.get("layout", "full")
         assert lay in LAYOUTS, lay
-        return section(f'      <figure class="{lay} fade">\n        <video src="{a(b["src"])}" poster="{a(b["poster"])}" muted loop playsinline preload="none" class="loop" aria-label="{a(b.get("alt", ""))}"></video>\n      </figure>\n', photo=True)
+        return section(f'      <figure class="{lay} fade">\n        <video src="{a(b["src"])}" poster="{a(b["poster"])}" muted loop playsinline preload="none" class="loop" aria-label="{a(b.get("alt", ""))}"></video>\n'
+                       + (f'        <figcaption>{t(b["caption"])}</figcaption>\n' if b.get("caption", "").strip() else "")
+                       + '      </figure>\n', photo=True)
     if k == "teaser":
         return section(
             '    <figure class="teaser fade">\n'

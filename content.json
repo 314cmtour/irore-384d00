@@ -71,7 +71,8 @@
       "layout": "full",
       "src": "media/ceiling.mp4",
       "poster": "media/ceiling-poster.jpg",
-      "alt": "天井にも映る水の揺らぎ"
+      "alt": "天井にも映る水の揺らぎ",
+      "caption": "天井にも映る水の揺らぎ"
     },
     {
       "type": "photo",

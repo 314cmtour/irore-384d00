@@ -150,7 +150,7 @@
     }
     if (b.type === 'video') {
       c.append(el('div', { class: 'photo' }, el('img', { src: '/' + b.poster, alt: '' }),
-        el('div', {}, select(b, 'layout', '配置', LAYOUT), field(b, 'alt', '動画の説明（読み上げ用）'),
+        el('div', {}, select(b, 'layout', '配置', LAYOUT), field(b, 'caption', 'キャプション（動画の下に出る。空なら出さない）', { multi: true }), field(b, 'alt', '動画の説明（画面には出ない。読み上げ用）'),
           el('div', { class: 'hint' }, `動画ファイル：${b.src}（動画の差し替えは秘書に頼んでください）`))));
     }
     if (b.type === 'teaser') {
