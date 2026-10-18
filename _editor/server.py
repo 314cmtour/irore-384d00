@@ -8,7 +8,7 @@
 
 ★守り: 127.0.0.1 だけで待ち受ける／Host を確かめる／書き込みは起動時に作る合言葉つきのときだけ。
 """
-import json, os, re, secrets, shutil, subprocess, sys, tempfile, threading, time, webbrowser
+import hashlib, importlib, json, os, re, secrets, shutil, subprocess, sys, tempfile, threading, time, webbrowser
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 from urllib.parse import urlparse, unquote, parse_qs
@@ -33,9 +33,20 @@ sys.path.insert(0, str(EDITOR))
 import build  # noqa: E402
 
 
-def run(cmd):
-    p = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
+def run(cmd, timeout=120):
+    try:
+        p = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        return 124, "時間切れ（通信が止まっています）"
     return p.returncode, (p.stdout + p.stderr).strip()
+
+
+def _media_ok(v):
+    """写真の場所が正しく、実在し、名前の大文字小文字まで一致するか（macOS は区別しないので git が取りこぼす）"""
+    return bool(re.fullmatch(r"media/[A-Za-z0-9._-]+", v)) and (ROOT / v).is_file() and Path(v).name in os.listdir(MEDIA)
+
+
+SERVER_SIG = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()   # 動いている仕組みの印（ディスクの版と比べる）
 
 
 def validate(c):
@@ -46,8 +57,7 @@ def validate(c):
             assert isinstance(b.get("items"), list) and b["items"], "まとまりに写真がありません"
             for it in b["items"]:
                 v = it.get("src", "")
-                assert re.fullmatch(r"media/[A-Za-z0-9._-]+", v), f"写真の場所が不正です: {v}"
-                assert (ROOT / v).is_file(), f"ファイルがありません: {v}"
+                assert _media_ok(v), f"写真が見つかりません: {v}"
         if b["type"] == "text":
             assert b.get("style") in build.STYLES, f"文字の大きさが不正です: {b.get('style')}"
         if b["type"] in ("photo", "video"):
@@ -55,8 +65,7 @@ def validate(c):
         for key in ("src", "poster"):
             if key in b:
                 v = b[key]
-                assert re.fullmatch(r"media/[A-Za-z0-9._-]+", v), f"写真の場所が不正です: {v}"
-                assert (ROOT / v).is_file(), f"ファイルがありません: {v}"
+                assert _media_ok(v), f"写真が見つかりません: {v}"
     build.build(c)  # 組み立てられるかを先に確かめる（失敗したら保存しない）
 
 
@@ -111,6 +120,15 @@ def new_version(src, name):
     return v
 
 
+def rev(v):
+    """その版の今の中身の印。読んだときの印と保存のときの印を比べ、別の画面の直しを黙って消さない"""
+    try:
+        c = load_version(v)
+    except FileNotFoundError:
+        return ""
+    return hashlib.sha256((v + "\n" + json.dumps(c, ensure_ascii=False, sort_keys=True)).encode()).hexdigest()[:16]
+
+
 def referenced(c):
     refs = {c["meta"].get("ogImage", "")}
     for b in c["blocks"]:
@@ -150,9 +168,11 @@ class H(SimpleHTTPRequestHandler):
     def _host_ok(self):
         return self.headers.get("Host", "") in HOSTS
 
-    def _json(self, code, obj):
+    def _json(self, code, obj, headers=None):
         body = json.dumps(obj, ensure_ascii=False).encode()
         self.send_response(code)
+        for k, val in (headers or {}).items():
+            self.send_header(k, val)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Cache-Control", "no-store")
         self.send_header("Content-Length", str(len(body)))
@@ -172,7 +192,8 @@ class H(SimpleHTTPRequestHandler):
         elif path == "/api/content":
             v = (parse_qs(urlparse(self.path).query).get("v") or ["live"])[0]
             try:
-                return self._json(200, load_version(_vid(v)))
+                c = load_version(_vid(v))
+                return self._json(200, c, {"X-Rev": rev(v)})
             except (AssertionError, FileNotFoundError):
                 return self._json(404, {"ok": False, "error": "その版は見つかりません"})
         elif path == "/api/versions":
@@ -227,13 +248,17 @@ class H(SimpleHTTPRequestHandler):
                     c = json.loads(data.decode("utf-8"))
                     validate(c)
                     if v != "live":
-                        assert draft_path(v).exists(), "その版は見つかりません"
+                        assert draft_path(v).exists(), "その版は見つかりません（公開されたか、消されました）。版を選び直してください"
+                    if self.headers.get("X-Base-Rev", "") != rev(v):
+                        return self._json(409, {"ok": False, "conflict": True,
+                            "error": "別の画面（または公開）で、この版が先に直されています。保存しませんでした。\n読み込み直してから直してください。いまの書きかけは、この画面に残っています。"})
+                    if v != "live":
                         save_draft(v, c)
-                        return self._json(200, {"ok": True})
-                    out = build.build(c)
-                    write_atomic(ROOT / "content.json", json.dumps(c, ensure_ascii=False, indent=2) + "\n")
-                    write_atomic(ROOT / "index.html", out)
-                    return self._json(200, {"ok": True})
+                    else:
+                        out = build.build(c)
+                        write_atomic(ROOT / "content.json", json.dumps(c, ensure_ascii=False, indent=2) + "\n")
+                        write_atomic(ROOT / "index.html", out)
+                    return self._json(200, {"ok": True, "rev": rev(v)})
                 if path == "/api/versions/new":
                     body = json.loads(data.decode("utf-8") or "{}")
                     nv = new_version(_vid(body.get("from", "live")), (body.get("name") or "").strip()[:60] or "新しい版")
@@ -245,6 +270,8 @@ class H(SimpleHTTPRequestHandler):
                     return self._json(200, {"ok": True})
                 if path == "/api/versions/delete":
                     assert v != "live", "公開中の版は消せません"
+                    if self.headers.get("X-Base-Rev", "") != rev(v):
+                        return self._json(409, {"ok": False, "conflict": True, "error": "別の画面でこの版が直されています。消しませんでした。読み込み直してから、もう一度確かめてください。"})
                     draft_path(v).unlink()
                     return self._json(200, {"ok": True})
                 if path == "/api/photo":
@@ -258,15 +285,22 @@ class H(SimpleHTTPRequestHandler):
                         validate(c)
                         live = load_version("live")
                         snap = time.strftime("v%Y%m%d-%H%M%S") + "-prev"
-                        save_draft(snap, live, f"公開していた版（{time.strftime('%Y-%m-%d %H:%M')} まで）")
-                        write_atomic(ROOT / "content.json", json.dumps(c, ensure_ascii=False, indent=2) + "\n")
-                        r = publish()
-                        if r.get("ok"):
-                            draft_path(v).unlink()
-                            r["message"] += "\nそれまで公開していた版は、版の一覧に残してあります。"
-                        else:
-                            write_atomic(ROOT / "content.json", json.dumps(live, ensure_ascii=False, indent=2) + "\n")
-                            draft_path(snap).unlink()
+                        old_json = (ROOT / "content.json").read_bytes()
+                        old_html = (ROOT / "index.html").read_bytes() if (ROOT / "index.html").exists() else None
+                        r = {"ok": False, "error": "公開の途中で止まりました"}
+                        try:
+                            save_draft(snap, live, f"公開していた版（{time.strftime('%Y-%m-%d %H:%M')} まで）")
+                            write_atomic(ROOT / "content.json", json.dumps(c, ensure_ascii=False, indent=2) + "\n")
+                            r = publish()
+                        finally:
+                            if r.get("ok"):
+                                draft_path(v).unlink(missing_ok=True)
+                                r["message"] += "\nそれまで公開していた版は、版の一覧に残してあります。"
+                            else:  # 元の公開中の版に戻す（下書きの版はそのまま残る）
+                                (ROOT / "content.json").write_bytes(old_json)
+                                if old_html is not None:
+                                    (ROOT / "index.html").write_bytes(old_html)
+                                draft_path(snap).unlink(missing_ok=True)
                         return self._json(200, r)
                     return self._json(200, publish())
         except AssertionError as e:
@@ -276,35 +310,96 @@ class H(SimpleHTTPRequestHandler):
         return self._json(404, {"ok": False, "error": "不明な操作"})
 
 
+def _ahead():
+    code, out = run(["git", "rev-list", "--count", "@{u}..HEAD"])
+    return int(out) if code == 0 and out.isdigit() else 0
+
+
+def _rebuild_index():
+    try:
+        write_atomic(ROOT / "index.html", build.build(json.loads((ROOT / "content.json").read_text(encoding="utf-8"))))
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def _new_server_ready():
+    """ディスク上の server.py が、動いている仕組みと違い、しかも動く形か"""
+    disk = (EDITOR / "server.py").read_bytes()
+    if hashlib.sha256(disk).hexdigest() == SERVER_SIG:
+        return None
+    code, out = run([sys.executable, "-m", "py_compile", str(EDITOR / "server.py")])
+    return code == 0
+
+
 def publish():
+    global build
+    # 送る準備の欄（index）を、いつも最後の commit にそろえてから始める（前回の失敗の残りを持ち込まない・手元のファイルは消えない）
+    run(["git", "reset", "-q"])
+    # index.html は content.json から作る生成物。取り込みの邪魔にならないよう commit の形に戻す（このあと作り直す）
+    run(["git", "checkout", "-q", "HEAD", "--", "index.html"])
     code, out = run(["git", "pull", "--ff-only", "-q"])
     if code:
-        return {"ok": False, "error": "最新を取り込めませんでした。何も変えていません。秘書に頼んでください。\n" + out}
+        _rebuild_index()
+        why = "通信が止まっています" if code == 124 else "別の場所の直しとぶつかっています"
+        return {"ok": False, "error": f"最新を取り込めませんでした（{why}）。公開していません。秘書に頼んでください。\n" + out}
+    # 編集室そのものが新しくなっていたら、新しい仕組みで立て直してから公開してもらう
+    ready = _new_server_ready()
+    if ready is not None:
+        _rebuild_index()
+        if not ready:
+            return {"ok": False, "error": "編集室の新しい仕組みに誤りがあるため、公開を止めました（今の編集室はそのまま使えます）。秘書に頼んでください。"}
+        threading.Timer(1.0, lambda: os._exit(0)).start()  # 常駐（KeepAlive）が新しい仕組みで立て直す
+        return {"ok": False, "error": "編集室の仕組みが新しくなったので、立て直しています。30秒ほど待って読み込み直し、もう一度「公開」を押してください。"}
+    try:
+        build = importlib.reload(build)
+    except Exception as e:  # noqa: BLE001
+        _rebuild_index()
+        return {"ok": False, "error": f"ページを組み立てる仕組みに誤りがあるため、公開を止めました。秘書に頼んでください。\n{e}"}
     c = json.loads((ROOT / "content.json").read_text(encoding="utf-8"))
     validate(c)
     write_atomic(ROOT / "index.html", build.build(c))
-    refs = referenced(c)
+    live_refs = referenced(c)
+    keep = set(live_refs)
     for ver in list_versions()[1:]:
         try:
-            refs |= referenced(load_version(ver["id"]))
+            keep |= referenced(load_version(ver["id"]))
         except Exception:  # noqa: BLE001
             pass
-    # 編集室で入れた写真（ph-*.jpg）のうち、もう使っていないものは外す（公開済みなら git の履歴に残る）
+    # 片付け：公開済み（最後の commit に入っている）ph-*.jpg のうち、どの版も使っていないものだけを外す。
+    #   まだ公開していない写真は、保存前・下書き用かもしれないので消さない
+    published = set(run(["git", "ls-tree", "-r", "--name-only", "HEAD", "--", "media"])[1].split())
     removed = []
     for p in MEDIA.glob("ph-*.jpg"):
-        if f"media/{p.name}" not in refs:
+        rel = f"media/{p.name}"
+        if rel in published and rel not in keep:
             p.unlink(); removed.append(p.name)
-    run(["git", "add", "-A", "--", "content.json", "index.html", "_editor", "編集室.command", ".gitignore"])
-    run(["git", "add", "-A", "--", "media/*.jpg", "media/*.jpeg", "media/*.png"])
-    code, out = run(["git", "diff", "--cached", "--quiet"])
-    if code == 0:
-        return {"ok": True, "message": "公開済みの内容と同じなので、出すものはありませんでした"}
-    code, out = run(["git", "commit", "-q", "-m", "編集室から更新（文章・写真）"])
+    # 載せるもの：仕組みと文章／公開済みの写真の変更と削除／公開する版が使う写真だけ（下書き専用の写真は出さない）
+    names = [n for n in ("content.json", "index.html", "_editor", "編集室.command", ".gitignore")
+             if (ROOT / n).exists() or run(["git", "ls-files", "--error-unmatch", "--", n])[0] == 0]
+    new_media = sorted(r for r in live_refs if r.startswith("media/") and (ROOT / r).is_file())
+    for cmd in (["git", "add", "-A", "--", *names], ["git", "add", "-u", "--", "media"]) + ((["git", "add", "--", *new_media],) if new_media else ()):
+        code, out = run(cmd)
+        if code:
+            run(["git", "reset", "-q"])
+            return {"ok": False, "error": "公開の準備に失敗しました。何も送っていません。\n" + out}
+    committed = False
+    code, _ = run(["git", "diff", "--cached", "--quiet"])
     if code:
-        return {"ok": False, "error": out}
+        code, out = run(["git", "commit", "-q", "-m", "編集室から更新（文章・写真）"])
+        if code:
+            run(["git", "reset", "-q"])
+            return {"ok": False, "error": out}
+        committed = True
+    if not _ahead():
+        return {"ok": True, "message": "公開済みの内容と同じなので、出すものはありませんでした", "removed": removed}
     code, out = run(["git", "push", "-q", "origin", "HEAD"])
     if code:
-        return {"ok": False, "error": "送れませんでした。\n" + out}
+        # 送り先には届いていた（返事だけ途切れた）ことがあるので、確かめてから決める
+        run(["git", "fetch", "-q", "origin"], timeout=60)
+        if run(["git", "rev-parse", "HEAD"])[1] != run(["git", "rev-parse", "@{u}"])[1]:
+            if committed:  # 送れなかった commit は残さない（準備の欄も外す。手元のファイルはそのまま）
+                run(["git", "reset", "-q", "HEAD~1"])
+            return {"ok": False, "error": "送れませんでした。もう一度「公開」を押してください。\n" + out}
     _, h = run(["git", "log", "-1", "--format=%h"])
     return {"ok": True, "message": f"公開しました（{h}）。数分で反映されます。", "removed": removed}
 
@@ -313,7 +408,7 @@ def main():
     if not shutil.which("git"):
         print("git が見つかりません"); sys.exit(1)
     servers = [ThreadingHTTPServer((h, PORT), H) for h in BIND]
-    url = f"http://127.0.0.1:{PORT}/#{TOKEN}"
+    url = f"http://127.0.0.1:{PORT}/"
     print(f"{time.strftime('%Y-%m-%d %H:%M')} 編集室を起動しました: " + "  ".join(f"http://{h}:{PORT}/" for h in BIND), flush=True)
     if "--no-browser" not in sys.argv:
         threading.Timer(0.6, lambda: webbrowser.open(url)).start()

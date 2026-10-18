@@ -79,14 +79,19 @@
 
 <script>
 (() => {
-  // 合言葉は編集室を開いたときの URL の # に付いてくる。タブを開いている間だけ覚えておく
-  const h = location.hash.slice(1);
-  if (h) { sessionStorage.setItem('irore-token', h); history.replaceState(null, '', location.pathname); }
+  // 合言葉は編集室から取ってきて、タブを開いている間だけ覚えておく。
+  //   ★URL の # からは受け取らない（古いリンクで合言葉が固定されるのを防ぐ・2026-10-18 点検）
+  if (location.hash) history.replaceState(null, '', location.pathname);
   let TOKEN = sessionStorage.getItem('irore-token') || '';
+  async function refreshToken() {
+    const t = (await (await fetch('/api/token')).json()).token || '';
+    if (t) { TOKEN = t; sessionStorage.setItem('irore-token', t); }
+    return t;
+  }
 
   const app = document.getElementById('app');
   const stateEl = document.getElementById('state');
-  let C = null, dirty = false;
+  let C = null, dirty = false, REV = '', OVERRIDE = false, SEQ = 0, saving = null;   // REV＝読んだときの版の印（保存のときに送り、食い違えば断られる）
 
   const LAYOUT = { full: '全幅', r60: '右寄せ（大）', l60: '左寄せ（大）', c40: '中央（小）' };
   const STYLE = { statement: 'はじめの文（大きめ）', concept: '本文（Concept など）', note: '注記（小さめ）' };
@@ -96,14 +101,21 @@
   let VER = sessionStorage.getItem('irore-ver') || 'live', VERS = [];
   const vq = () => '?v=' + encodeURIComponent(VER);
   const DRAFT_KEY = () => 'irore-draft:' + VER;
-  const keepDraft = () => { try { localStorage.setItem(DRAFT_KEY(), JSON.stringify(C)); } catch (e) {} };
+  const keepDraft = () => { try { localStorage.setItem(DRAFT_KEY(), JSON.stringify({ base: REV, c: C, override: OVERRIDE })); } catch (e) {} };
   const setDirty = (d) => { dirty = d; if (d) keepDraft(); else { try { localStorage.removeItem(DRAFT_KEY()); } catch (e) {} } stateEl.textContent = d ? '● 保存していない変更があります' : '保存済み'; stateEl.className = d ? 'dirty' : 'ok'; };
   const el = (tag, attrs = {}, ...kids) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs)) { if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else if (k === 'class') e.className = v; else e.setAttribute(k, v); } kids.flat().forEach(k => k != null && e.append(k)); return e; };
 
-  async function api(path, opts = {}) {
-    const r = await fetch(path, { ...opts, headers: { 'X-Token': TOKEN, ...(opts.headers || {}) } });
+  const NET = 'つながりませんでした。電波と Tailscale を確かめて、もう一度押してください（書きかけは画面に残っています）';
+  async function api(path, opts = {}, retried = false) {
+    let r;
+    try { r = await fetch(path, { ...opts, headers: { 'X-Token': TOKEN, ...(opts.headers || {}) } }); }
+    catch (e) { throw new Error(NET); }
+    if (r.status === 403 && !retried) {
+      const old = TOKEN;
+      try { if ((await refreshToken()) !== old) return api(path, opts, true); } catch (e) {}
+    }
     const j = await r.json().catch(() => ({ ok: false, error: '応答を読めませんでした' }));
-    if (!r.ok || j.ok === false) throw new Error(j.error || r.statusText);
+    if (!r.ok || j.ok === false) { const err = new Error(j.error || r.statusText); err.conflict = !!j.conflict; throw err; }
     return j;
   }
 
@@ -122,8 +134,10 @@
   }
 
   async function upload(file) {
+    const ver0 = VER;
     toast(`写真を取り込んでいます… ${file.name}`);
     const j = await api('/api/photo', { method: 'POST', headers: { 'X-Filename': encodeURIComponent(file.name) }, body: file });
+    if (VER !== ver0) throw new Error('取り込みの途中で版を切り替えたので、この写真は入れませんでした');
     return j.src;
   }
   function pickFiles(multiple) {
@@ -138,8 +152,10 @@
   function move(i, d) { const b = C.blocks; const j = i + d; if (j < 0 || j >= b.length) return; [b[i], b[j]] = [b[j], b[i]]; setDirty(true); render(); }
   function remove(i) { const b = C.blocks[i]; if (!confirm(`この${KIND[b.type]}を外しますか？\n保存すると消えます。保存する前なら、ページを読み込み直せば元に戻ります。`)) return; C.blocks.splice(i, 1); setDirty(true); render(); }
   async function addPhotos(at, files) {
-    try { for (const f of files) { const src = await upload(f); C.blocks.splice(at++, 0, { type: 'photo', layout: 'full', src, alt: '', caption: '' }); } setDirty(true); render(); toast('写真を入れました。配置とキャプションを決めて、保存してください'); }
-    catch (e) { toast(e.message, true); }
+    let added = 0;
+    try { for (const f of files) { const src = await upload(f); C.blocks.splice(at++, 0, { type: 'photo', layout: 'full', src, alt: '', caption: '' }); added++; } toast('写真を入れました。配置とキャプションを決めて、保存してください'); }
+    catch (e) { toast((added ? `${added}枚は入れました。` : '') + e.message, true); }
+    finally { if (added) { setDirty(true); render(); } }
   }
   function insertBar(at) {
     return el('div', { class: 'ins' },
@@ -184,7 +200,7 @@
             el('button', { class: 'small', onclick: () => { if (b.items.length === 1) return toast('最後の1枚は外せません。まとまりごと「外す」を使ってください', true); b.items.splice(j, 1); setDirty(true); draw(); } }, '×')), alt);
       }));
       draw();
-      const add = async (files) => { try { for (const f of files) b.items.push({ src: await upload(f), alt: '' }); setDirty(true); draw(); toast('写真を足しました'); } catch (e) { toast(e.message, true); } };
+      const add = async (files) => { let n = 0; try { for (const f of files) { b.items.push({ src: await upload(f), alt: '' }); n++; } toast('写真を足しました'); } catch (e) { toast((n ? `${n}枚は足しました。` : '') + e.message, true); } finally { if (n) { setDirty(true); draw(); } } };
       c.append(grid, el('button', { class: 'small', onclick: async () => { const fs = await pickFiles(true); if (fs.length) add(fs); } }, '＋ 写真を足す'),
         el('div', { class: 'hint' }, '2列で並びます。枚数が奇数のときは1枚目が横いっぱいになります。ここに写真をドラッグしても足せます。'),
         field(b, 'caption', 'キャプション（まとまりの下に1つ出る）', { multi: true }));
@@ -239,9 +255,16 @@
     scrollTo(0, y);
   }
 
-  async function save() {
-    await api('/api/content' + vq(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(C) });
-    setDirty(false);
+  function save() {
+    if (saving) return saving;   // 二度押し・保存中の公開は、同じ保存を待つ（同じ印で2本送って誤って断られない）
+    const ver0 = VER, sent = JSON.stringify(C), base = REV;
+    saving = (async () => {
+      const j = await api('/api/content?v=' + encodeURIComponent(ver0), { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Base-Rev': base }, body: sent });
+      if (VER !== ver0) return;
+      REV = j.rev || REV; OVERRIDE = false;
+      if (JSON.stringify(C) === sent) setDirty(false); else keepDraft();   // 保存中に打った分は、まだ保存していない
+    })().finally(() => { saving = null; });
+    return saving;
   }
   document.getElementById('save').onclick = async () => { try { await save(); toast('保存しました（まだ公開していません）'); } catch (e) { toast(e.message, true); } };
   document.getElementById('preview').onclick = async () => {
@@ -267,22 +290,38 @@
     t.style.display = 'block'; t._h = setTimeout(() => t.style.display = 'none', 30000);
   }
   async function loadVersions() {
-    VERS = (await (await fetch('/api/versions')).json()).versions;
-    if (!VERS.some(v => v.id === VER)) VER = 'live';
+    VERS = (await (await fetch('/api/versions')).json()).versions;   // ★ここでは VER を変えない（表示と保存先がずれるため）
     const sel = document.getElementById('vsel');
     sel.replaceChildren(...VERS.map(v => el('option', { value: v.id }, v.id === 'live' ? '● 公開中の版' : `${v.name}　（${v.updated}）`)));
     sel.value = VER;
   }
   async function switchTo(v, force) {
     if (!force && dirty && !confirm('保存していない変更があります。保存せずに版を切り替えますか？\n（書きかけは、その版に戻ったときに戻せます）')) { document.getElementById('vsel').value = VER; return; }
-    VER = v; sessionStorage.setItem('irore-ver', VER);
-    await loadVersions();
+    const my = ++SEQ;
+    let r, nc = null;
+    try { r = await fetch('/api/content?v=' + encodeURIComponent(v)); nc = await r.json().catch(() => null); } catch (e) { r = null; }
+    if (my !== SEQ) return;   // あとから別の版を選んだので、この返事は使わない
+    if (r && r.status === 404 && v !== 'live') {
+      sessionStorage.setItem('irore-ver', 'live');
+      toast('開いていた版は、公開されたか消されたので、公開中の版を開きました');
+      return switchTo('live', true);
+    }
+    if (!r || !r.ok || !nc || nc.ok === false) { document.getElementById('vsel').value = VER; throw new Error((nc && nc.error) || 'その版を読み込めませんでした。電波を確かめて、もう一度選んでください'); }
+    VER = v; sessionStorage.setItem('irore-ver', VER); C = nc; REV = r.headers.get('X-Rev') || ''; OVERRIDE = false;
+    await loadVersions().catch(() => {});
+    if (my !== SEQ) return;
     document.body.classList.toggle('draft', VER !== 'live');
     document.getElementById('vnote').textContent = VER === 'live' ? 'いまサイトに出ている内容です' : '下書きの版です。保存してもサイトには出ません。「公開」を押すとこの版に入れ替わります';
     document.getElementById('vren').disabled = document.getElementById('vdel').disabled = VER === 'live';
-    C = await (await fetch('/api/content' + vq())).json();
-    let draft = null; try { draft = localStorage.getItem(DRAFT_KEY()); } catch (e) {}
-    if (draft && draft !== JSON.stringify(C) && confirm('この版に、保存しないまま閉じた書きかけがあります。戻しますか？\n（「キャンセル」で書きかけを捨てます）')) { C = JSON.parse(draft); render(); setDirty(true); }
+    let draft = null; try { draft = JSON.parse(localStorage.getItem(DRAFT_KEY()) || 'null'); } catch (e) {}
+    if (draft && !('base' in draft) && Array.isArray(draft.blocks)) draft = { base: null, c: draft };   // 以前の形の控え＝元が分からないので強い確認で聞く
+    let restore = false;
+    if (draft && JSON.stringify(draft.c) !== JSON.stringify(C)) {
+      restore = draft.base === REV && !draft.override
+        ? confirm('この版に、保存しないまま閉じた書きかけがあります。戻しますか？\n（「キャンセル」で書きかけを捨てます）')
+        : confirm('書きかけがありますが、そのあとで別の画面（または公開）でこの版が直されています。\n戻すと、その直しを消して書きかけで置き換えます。戻しますか？\n（「キャンセル」で書きかけを捨て、今の内容を開きます）');
+    }
+    if (restore) { OVERRIDE = !(draft.base === REV && !draft.override); C = draft.c; render(); setDirty(true); }
     else { render(); setDirty(false); }
   }
   document.getElementById('vsel').onchange = (e) => switchTo(e.target.value).catch(err => toast(err.message, true));
@@ -300,15 +339,15 @@
   document.getElementById('vdel').onclick = async () => {
     const cur = (VERS.find(v => v.id === VER) || {}).name || '';
     if (!confirm(`「${cur}」を消しますか？\nこの版は元に戻せません（サイトに出ている内容には影響しません）。`)) return;
-    try { await api('/api/versions/delete' + vq(), { method: 'POST' }); try { localStorage.removeItem(DRAFT_KEY()); } catch (e) {} await switchTo('live', true); toast('消しました'); } catch (e) { toast(e.message, true); }
+    try { await api('/api/versions/delete' + vq(), { method: 'POST', headers: { 'X-Base-Rev': REV } }); try { localStorage.removeItem(DRAFT_KEY()); } catch (e) {} await switchTo('live', true); toast('消しました'); } catch (e) { toast(e.message, true); }
   };
   addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
 
   (async () => {
-    if (!TOKEN) { try { TOKEN = (await (await fetch('/api/token')).json()).token || ''; sessionStorage.setItem('irore-token', TOKEN); } catch (e) {} }
+    if (!TOKEN) { try { await refreshToken(); } catch (e) {} }
     if (!TOKEN) { app.replaceChildren(el('div', { id: 'block-msg' }, '「編集室.command」から開き直してください。')); stateEl.textContent = ''; return; }
     try { await switchTo(VER, true); }
-    catch (e) { app.replaceChildren(el('div', { id: 'block-msg' }, '編集室が動いていません。「編集室.command」から開き直してください。')); }
+    catch (e) { app.replaceChildren(el('div', { id: 'block-msg' }, '編集室につながりませんでした。電波と Tailscale を確かめて、読み込み直してください。')); }
   })();
 })();
 </script>
