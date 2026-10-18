@@ -54,17 +54,17 @@
     },
     {
       "type": "photo",
-      "layout": "r60",
-      "src": "media/ph1.jpg",
-      "alt": "吊るされた裸電球と、光る水面の囲炉裏",
-      "caption": "炉の水面に、言葉が不規則に浮かび上がります"
-    },
-    {
-      "type": "photo",
       "layout": "l60",
       "src": "media/ph4.jpg",
       "alt": "囲炉裏を覗き込み、水面に手をかざす人",
       "caption": "水面に手をかざすことで、投影される内容が変わります"
+    },
+    {
+      "type": "photo",
+      "layout": "r60",
+      "src": "media/ph1.jpg",
+      "alt": "吊るされた裸電球と、光る水面の囲炉裏",
+      "caption": "炉は表情を変えます"
     },
     {
       "type": "video",
@@ -72,7 +72,7 @@
       "src": "media/ceiling.mp4",
       "poster": "media/ceiling-poster.jpg",
       "alt": "天井にも映る水の揺らぎ",
-      "caption": "天井にも映る水の揺らぎ"
+      "caption": "天井に映る水の揺らぎ"
     },
     {
       "type": "photo",
