@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:,">
+<title><!--@TITLE--></title>
+<meta name="description" content="<!--@DESCRIPTION-->">
+<meta property="og:title" content="<!--@OG_TITLE-->">
+<meta property="og:description" content="<!--@OG_DESCRIPTION-->">
+<meta property="og:image" content="<!--@OG_IMAGE-->">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400&family=Noto+Serif+JP:wght@300;400&display=swap" rel="stylesheet">
+<!--
+  ★このファイルは _editor/template.html から作られる。文章と写真は content.json（編集室で直す）。index.html を手で直さない。
+  iro:re 作品サイト（やまなしメディア芸術アワード2026-27 応募用・2026-10-15）
+  ★素材は 2027/撮影素材（4K ProRes）から書き出し。原本は git に入れない。
+  ★文章は作家本人の言葉だけを使う（150字キャプション＝2026-09-13決定／作品名の由来＝カネイチ応募書類）。
+  ★動画は音なしで繰り返す断片3本と、音つきで見る記録1本。自動再生は音なしのものだけ。
+  ★トップ（hero）は 2026-10-16 に 2027/インスタグラム/サイトトップ.mp4（縦 1080×1920・55秒・文字なし）へ差し替え。音は落として書き出し。
+  ★2026-10-17 に 動画素材/上から下へ②.mp4（横 1920×1080・36.6秒・音あり・HTML 側は muted で無音再生）へ差し替え。ポスターも同じ動画の先頭から作り直し。
+  ★同日、iPhone で再生ボタンが反応しない件の対処として、音なし・H.264 High 4.0・ビットレートを下げた版（約10.7MB・先頭に目次）へ作り直し。
+-->
+<style>
+  :root{
+    --bg:#151412; --bg-rgb:21,20,18; --ink:#e8e4dc; --mute:#8b867d; --line:#2e2b27; --gap:clamp(120px,26svh,300px);  /* 地は墨色＝暖かい濃い灰色（2026-10-16 健さん・同日「もっと濃く」で #201e1b→#151412） */
+    --sans:"Inter",-apple-system,"Helvetica Neue",sans-serif;
+    --serif:"Noto Serif JP","Hiragino Mincho ProN",serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  body{font-family:var(--serif);font-weight:300;line-height:2;letter-spacing:.04em}
+  img,video{display:block;width:100%;height:auto;background:var(--bg)}
+  a{color:inherit}
+
+  /* ── 冒頭：水面だけ ── */
+  .hero{position:relative;height:100svh;overflow:hidden}
+  .hero video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.92;background:var(--bg)}
+  @media (min-aspect-ratio:1/1){.hero video{object-fit:contain;background:transparent}}  /* 縦長の動画。横長の画面では切らずに中央へ（左右は背景の写真が暗く透ける） */
+
+  /* ── 背景：写真 4862 を画面に固定（iPhone でも効くよう固定 img で組む） ── */
+  .backdrop{position:fixed;inset:0;z-index:-1;pointer-events:none}
+  .backdrop img{width:100%;height:100%;object-fit:cover;object-position:50% 60%;background:none}
+  .hero{background:rgba(var(--bg-rgb),.6)}
+  /* ── 区切りの帯（2026-10-16 健さん「写真1枚ごとに区切って、隙間から背景が見えるように」）
+     中身は写真1枚ごと・段落ごとに横幅いっぱいの墨色の帯に載せ、帯と帯の隙間から止まった背景が見える ── */
+  main{padding-top:var(--gap)}
+  /* 帯は白い絹（2026-10-16 健さん「帯の色をシルク風に・少し透過してもok」）
+     生成りの地＋斜めに流れるつや（画面に固定＝帯が流れるとつやが滑る）＋シルク繊維（横に長い細い筋の光と影・ゆるく揺らぐつやの筋＝SVG のノイズで生成）。少し透かして背景をぼかす */
+  .band{--ink:#2a251f; --mute:#7a7266; --line:rgba(42,37,31,.16);
+    color:var(--ink);padding:clamp(56px,9vh,112px) 0;
+    background:
+      linear-gradient(112deg,rgba(255,255,255,0) 22%,rgba(255,255,255,.42) 44%,rgba(255,255,255,0) 66%) fixed,
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='960' height='960'%3E%3Cfilter id='f' x='0' y='0' width='100%' height='100%'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.0012 0.018' numOctaves='2' seed='23' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 1.2 0 0 0 -0.55'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23f)'/%3E%3C/svg%3E") 0 0/960px 960px,
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='480' height='480'%3E%3Cfilter id='f' x='0' y='0' width='100%' height='100%'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.009 1.1' numOctaves='3' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 1 0 0 0 0 0.985 0 0 0 0 0.955 1.25 0 0 0 -0.62'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23f)'/%3E%3C/svg%3E") 0 0/480px 480px,
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='480' height='480'%3E%3Cfilter id='f' x='0' y='0' width='100%' height='100%'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 1.6' numOctaves='2' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.36 0 0 0 0 0.29 0 0 0 0 0.19 0.9 0 0 0 -0.55'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23f)'/%3E%3C/svg%3E") 0 0/480px 480px,
+      linear-gradient(180deg,rgba(246,242,233,.9),rgba(235,229,217,.86));
+    -webkit-backdrop-filter:blur(10px) saturate(.9);backdrop-filter:blur(10px) saturate(.9)}
+  .band .note{color:#4d463d}
+  /* コンセプト（2026-10-17 健さんの音声入力を整えたもの） */
+  .concept{max-width:34em;margin-left:clamp(0px,16vw,240px);font-size:15px;line-height:2.1}
+  .concept p+p{margin-top:1.8em}
+  .band.photo{padding:clamp(28px,5vh,64px) 0}
+  .band + .band{margin-top:var(--gap)}
+  .hero::after{content:"";position:absolute;inset:0;pointer-events:none;  /* タップを下の動画へ通す（iPhone で再生ボタンが反応しない件・2026-10-17） */
+    background:linear-gradient(to bottom,rgba(var(--bg-rgb),0) 55%,rgba(var(--bg-rgb),.85))}
+  /* 題字：初めは左下。スクロールに合わせて左上へ小さく移り、そこで止まって常に見える（2026-10-16 健さん） */
+  .mark{position:fixed;left:clamp(20px,5vw,72px);bottom:clamp(24px,6vh,64px);z-index:10;transform-origin:0 0;will-change:transform}
+  .mark{mix-blend-mode:difference}  /* 白い絹の帯の上でも読めるよう、下の明るさに合わせて反転 */
+  .mark.stuck{cursor:pointer}
+  .mark h1{font-family:var(--sans);font-weight:300;font-size:clamp(28px,4.2vw,56px);letter-spacing:.06em;line-height:1}
+  .mark p{font-family:var(--sans);font-size:12px;color:var(--mute);letter-spacing:.2em;margin-top:14px}
+  .cue{position:absolute;right:clamp(20px,5vw,72px);bottom:clamp(24px,6vh,64px);z-index:2;pointer-events:none;
+    display:flex;flex-direction:column;align-items:center;gap:16px;
+    font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.3em}
+  .cue span{writing-mode:vertical-rl}
+  .cue i{width:7px;height:7px;border-right:1px solid currentColor;border-bottom:1px solid currentColor;opacity:.7;transform:rotate(45deg);animation:cuebob 2.4s ease-in-out infinite}
+  @keyframes cuebob{0%,100%{transform:translateY(0) rotate(45deg)}50%{transform:translateY(5px) rotate(45deg)}}
+  @media (prefers-reduced-motion:reduce){.cue i{animation:none}}
+
+  /* ── 本文 ── */
+  .wrap{width:min(1200px,100% - 40px);margin:0 auto}
+  section{padding:clamp(96px,16vh,200px) 0}
+  .label{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.3em;text-transform:uppercase;margin-bottom:40px}
+
+  .statement{max-width:30em;margin-left:clamp(0px,16vw,240px);font-size:clamp(16px,1.5vw,19px)}
+  .statement p+p{margin-top:2em}
+
+  /* ── 写真と映像の並び ── */
+  .seq{display:grid;gap:clamp(72px,12vh,160px)}
+  .full{width:100%}
+  .l60{width:min(62%,760px)}
+  .r60{width:min(62%,760px);margin-left:auto}
+  .c40{width:min(40%,460px);margin:0 auto}
+  .pair{display:grid;grid-template-columns:1fr 1fr;gap:clamp(12px,2vw,28px)}
+  figure figcaption{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.12em;margin-top:14px}
+
+  /* ティーザー：再生と全画面のミニマルな印（2026-10-18）。重なりはタップを素通しにする */
+  .teaser{max-width:980px;margin:0 auto}
+  .vbox{position:relative;aspect-ratio:16/9;background:#000;overflow:hidden}
+  .vbox img,.vbox iframe{display:block;position:absolute;inset:0;width:100%;height:100%;border:0;object-fit:cover}
+  .vbox::after{content:"";position:absolute;inset:0;pointer-events:none;transition:opacity .4s;
+    background:linear-gradient(to top,rgba(0,0,0,.45),rgba(0,0,0,0) 35%)}
+  .vplay,.vfull{position:absolute;z-index:2;border:0;background:none;padding:0;cursor:pointer;color:#fff;opacity:.8;transition:opacity .3s,transform .3s}
+  .vplay{inset:0;margin:auto;width:clamp(52px,7vw,72px);height:clamp(52px,7vw,72px)}
+  .vplay svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1}
+  .vplay path{fill:currentColor;stroke:none}
+  .vfull{right:10px;bottom:8px;width:40px;height:40px;padding:10px}
+  .vfull svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.3}
+  .vplay:hover,.vfull:hover{opacity:1}
+  .vplay:hover{transform:scale(1.04)}
+  .vmeta{position:absolute;z-index:2;left:16px;bottom:16px;font-family:var(--sans);font-size:10px;letter-spacing:.3em;color:#fff;opacity:.75;pointer-events:none;transition:opacity .3s}
+  .vbox.playing .vplay,.vbox.playing .vfull,.vbox.playing .vmeta,.vbox.playing::after{opacity:0;pointer-events:none}
+
+  .note{max-width:34em;margin-left:clamp(0px,16vw,240px);font-size:15px;color:#c9c4ba}
+
+  /* ── 作品データ ── */
+  dl.data{display:grid;grid-template-columns:9em 1fr;row-gap:18px;column-gap:24px;
+    max-width:44em;margin-left:clamp(0px,16vw,240px);font-size:14px;line-height:1.9}
+  dl.data dt{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.2em;padding-top:4px}
+  dl.data dd{border-bottom:1px solid var(--line);padding-bottom:18px}
+
+  footer{padding:80px 0 56px !important;font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.2em}
+
+  /* ── 静かに現れる ── */
+  .fade{opacity:0;transform:translateY(16px);transition:opacity 1.4s ease,transform 1.4s ease}
+  .fade.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){.fade{opacity:1;transform:none;transition:none}}
+
+  @media (max-width:720px){
+    .l60,.r60{width:100%}
+    .c40{width:72%}
+    .pair{grid-template-columns:1fr}
+    .statement,.note,.concept,dl.data{margin-left:0}
+    dl.data{grid-template-columns:1fr;row-gap:6px}
+    dl.data dd{margin-bottom:14px}
+  }
+</style>
+</head>
+<body>
+<div class="backdrop" aria-hidden="true"><img src="media/p4862.jpg" alt="" decoding="async"></div>
+
+<header class="hero">
+  <video src="media/hero.mp4" poster="media/hero-poster.jpg" autoplay muted loop playsinline preload="auto" aria-label="裸電球の下から、光の粒が浮かぶ水面へ、ゆっくり下りていく"></video>
+  <div class="mark">
+    <h1><!--@HERO_NAME--></h1>
+    <p><!--@HERO_SUB--></p>
+  </div>
+  <div class="cue"><span>SCROLL</span><i></i></div>
+</header>
+
+<main><!--@MAIN--></main>
+
+<footer class="band foot"><div class="wrap"><!--@FOOTER--></div></footer>
+
+<script>
+  // 画面に入ったものだけを静かに現し、繰り返し動画は見えている間だけ再生する（CPUと通信を節約）
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) e.target.classList.add('in');
+  }), { threshold: .12 });
+  document.querySelectorAll('.fade').forEach(el => io.observe(el));
+
+  const vo = new IntersectionObserver(es => es.forEach(e => {
+    const v = e.target;
+    if (e.isIntersecting) { v.preload = 'auto'; v.play().catch(() => {}); } else v.pause();
+  }), { threshold: .25 });
+  document.querySelectorAll('video.loop').forEach(v => vo.observe(v));
+
+  // 題字を左下から左上へ。画面の高さの7割をスクロールするあいだに移し、あとは止めておく
+  const mark = document.querySelector('.mark'), mh1 = mark.querySelector('h1'), msub = mark.querySelector('p');
+  let ticking = false;
+  const place = () => {
+    ticking = false;
+    const vh = innerHeight, p = Math.min(Math.max(scrollY / (vh * .7), 0), 1);
+    const cs = getComputedStyle(mark);
+    const left = parseFloat(cs.left), bottom = parseFloat(cs.bottom);
+    const y0 = vh - bottom - mark.offsetHeight;                 // 初めの上端
+    const gap = Math.max(16, Math.min(28, vh * .03));            // 止まる位置（上端・左端）
+    const sEnd = Math.min(1, 20 / parseFloat(getComputedStyle(mh1).fontSize));  // 止まったときの字の大きさ＝20px
+    const s = 1 - (1 - sEnd) * p;
+    mark.style.transform = `translate(${(Math.min(left, gap) - left) * p}px, ${(gap - y0) * p}px) scale(${s})`;
+    msub.style.opacity = Math.max(0, 1 - p * 1.6);
+    mark.classList.toggle('stuck', p >= 1);
+  };
+  const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(place); } };
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', onScroll);
+  place();
+  mark.addEventListener('click', () => { if (mark.classList.contains('stuck')) scrollTo({ top: 0, behavior: 'smooth' }); });
+
+</script>
+<script>
+/* ティーザー：画質のため YouTube（限定公開）から流す。押すまでは画像だけ（2026-10-18）
+   ▶＝その場で再生／四隅＝全画面。iPhone は iframe を全画面にできないので YouTube を開く */
+(() => {
+  const box = document.querySelector('.vbox'); if (!box) return;
+  const id = box.dataset.yt;
+  const mount = () => {
+    let f = box.querySelector('iframe'); if (f) return f;
+    f = document.createElement('iframe');
+    f.referrerPolicy = 'strict-origin-when-cross-origin';  // YouTube は送り元が無いと再生しない（nocookie 版はエラーになった・10/18 実測）
+    f.src = `https://www.youtube.com/embed/${id}?autoplay=1&rel=0&playsinline=1`;
+    f.title = 'iro:re ティーザー';
+    f.allow = 'autoplay; encrypted-media; fullscreen; picture-in-picture';
+    f.allowFullscreen = true;
+    box.appendChild(f); box.classList.add('playing');
+    return f;
+  };
+  box.querySelector('.vplay').addEventListener('click', mount);
+  box.querySelector('.vfull').addEventListener('click', () => {
+    const f = mount();
+    if (f.requestFullscreen) f.requestFullscreen().catch(() => window.open(`https://youtu.be/${id}`, '_blank'));
+    else if (f.webkitRequestFullscreen) f.webkitRequestFullscreen();
+    else window.open(`https://youtu.be/${id}`, '_blank');
+  });
+})();
+</script>
+</body>
+</html>
