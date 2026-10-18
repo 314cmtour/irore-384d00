@@ -302,7 +302,8 @@
   const mount = () => {
     let f = box.querySelector('iframe'); if (f) return f;
     f = document.createElement('iframe');
-    f.src = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&playsinline=1`;
+    f.referrerPolicy = 'strict-origin-when-cross-origin';  // YouTube は送り元が無いと再生しない（nocookie 版はエラーになった・10/18 実測）
+    f.src = `https://www.youtube.com/embed/${id}?autoplay=1&rel=0&playsinline=1`;
     f.title = 'iro:re ティーザー';
     f.allow = 'autoplay; encrypted-media; fullscreen; picture-in-picture';
     f.allowFullscreen = true;
