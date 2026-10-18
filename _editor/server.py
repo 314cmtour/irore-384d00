@@ -33,7 +33,13 @@ def run(cmd):
 def validate(c):
     assert isinstance(c, dict) and isinstance(c.get("blocks"), list), "形が違います"
     for b in c["blocks"]:
-        assert b.get("type") in ("text", "photo", "video", "teaser", "data"), f"知らない種類: {b.get('type')}"
+        assert b.get("type") in ("text", "photo", "video", "teaser", "data", "gallery"), f"知らない種類: {b.get('type')}"
+        if b["type"] == "gallery":
+            assert isinstance(b.get("items"), list) and b["items"], "まとまりに写真がありません"
+            for it in b["items"]:
+                v = it.get("src", "")
+                assert re.fullmatch(r"media/[A-Za-z0-9._-]+", v), f"写真の場所が不正です: {v}"
+                assert (ROOT / v).is_file(), f"ファイルがありません: {v}"
         if b["type"] == "text":
             assert b.get("style") in build.STYLES, f"文字の大きさが不正です: {b.get('style')}"
         if b["type"] in ("photo", "video"):
@@ -56,6 +62,7 @@ def referenced(c):
     refs = {c["meta"].get("ogImage", "")}
     for b in c["blocks"]:
         refs.update(b.get(k, "") for k in ("src", "poster"))
+        refs.update(it.get("src", "") for it in b.get("items", []))
     return {r for r in refs if r}
 
 

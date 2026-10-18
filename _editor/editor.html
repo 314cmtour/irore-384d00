@@ -14,6 +14,10 @@
   header{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:12px;padding:12px 20px;background:rgba(21,20,18,.94);border-bottom:1px solid var(--line);backdrop-filter:blur(6px)}
   header h1{font-size:15px;font-weight:400;letter-spacing:.12em;margin:0 auto 0 0}
   #state{font-size:12px;color:var(--mute)}
+  #site{font-size:12px;color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(217,199,163,.35)}
+  #site:hover{border-bottom-color:var(--accent)}
+  #toast a{color:var(--accent)}
+  @media (max-width:640px){#site{display:none}}
   #state.dirty{color:var(--warn)} #state.ok{color:var(--ok)}
   button{font:inherit;color:var(--ink);background:none;border:1px solid var(--line);border-radius:6px;padding:6px 14px;cursor:pointer}
   button:hover{border-color:var(--mute)}
@@ -47,6 +51,7 @@
 <body>
 <header>
   <h1>iro:re 編集室</h1>
+  <a id="site" href="https://314cmtour.github.io/irore-384d00/" target="_blank" rel="noopener" title="公開中のサイトを開く">314cmtour.github.io/irore-384d00 ↗</a>
   <span id="state">読み込み中…</span>
   <button id="preview">プレビュー</button>
   <button id="save">保存</button>
@@ -69,7 +74,7 @@
 
   const LAYOUT = { full: '全幅', r60: '右寄せ（大）', l60: '左寄せ（大）', c40: '中央（小）' };
   const STYLE = { statement: 'はじめの文（大きめ）', concept: '本文（Concept など）', note: '注記（小さめ）' };
-  const KIND = { text: '文章', photo: '写真', video: '動画（ループ）', teaser: 'ティーザー（YouTube）', data: '作品データ' };
+  const KIND = { text: '文章', photo: '写真', gallery: '写真のまとまり（1つの帯）', video: '動画（ループ）', teaser: 'ティーザー（YouTube）', data: '作品データ' };
 
   const toast = (msg, err) => { const t = document.getElementById('toast'); t.textContent = msg; t.className = err ? 'err' : ''; t.style.display = 'block'; clearTimeout(t._h); t._h = setTimeout(() => t.style.display = 'none', err ? 9000 : 3500); };
   const DRAFT = 'irore-draft';
@@ -121,7 +126,8 @@
   function insertBar(at) {
     return el('div', { class: 'ins' },
       el('button', { class: 'small', onclick: () => { C.blocks.splice(at, 0, { type: 'text', style: 'concept', label: '', paragraphs: [''] }); setDirty(true); render(); } }, '＋ 文章'),
-      el('button', { class: 'small', onclick: async () => { const fs = await pickFiles(true); if (fs.length) addPhotos(at, fs); } }, '＋ 写真'));
+      el('button', { class: 'small', onclick: async () => { const fs = await pickFiles(true); if (fs.length) addPhotos(at, fs); } }, '＋ 写真'),
+      el('button', { class: 'small', onclick: async () => { const fs = await pickFiles(true); if (!fs.length) return; try { const items = []; for (const f of fs) items.push({ src: await upload(f), alt: '' }); C.blocks.splice(at, 0, { type: 'gallery', items, caption: '' }); setDirty(true); render(); } catch (e) { toast(e.message, true); } } }, '＋ 写真のまとまり'));
   }
 
   function card(b, i) {
@@ -147,6 +153,24 @@
         el('div', {}, select(b, 'layout', '配置', LAYOUT), field(b, 'caption', 'キャプション（写真の下に出る。空なら出さない）', { multi: true }),
           field(b, 'alt', '写真の説明（画面には出ない。読み上げと検索用）'))));
       dropTarget(c, replace);
+    }
+    if (b.type === 'gallery') {
+      const grid = el('div', { style: 'display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:8px' });
+      const draw = () => grid.replaceChildren(...b.items.map((it, j) => {
+        const alt = el('input', { type: 'text', placeholder: '写真の説明（読み上げ用）' }); alt.value = it.alt || '';
+        alt.addEventListener('input', () => { it.alt = alt.value; setDirty(true); });
+        const mv = (d) => { const k = j + d; if (k < 0 || k >= b.items.length) return; [b.items[j], b.items[k]] = [b.items[k], b.items[j]]; setDirty(true); draw(); };
+        return el('div', {}, el('img', { src: '/' + it.src, alt: '', style: 'width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:6px;display:block' }),
+          el('div', { style: 'display:flex;gap:4px;margin:6px 0' },
+            el('button', { class: 'small', onclick: () => mv(-1) }, '←'), el('button', { class: 'small', onclick: () => mv(1) }, '→'),
+            el('button', { class: 'small', onclick: () => { if (b.items.length === 1) return toast('最後の1枚は外せません。まとまりごと「外す」を使ってください', true); b.items.splice(j, 1); setDirty(true); draw(); } }, '×')), alt);
+      }));
+      draw();
+      const add = async (files) => { try { for (const f of files) b.items.push({ src: await upload(f), alt: '' }); setDirty(true); draw(); toast('写真を足しました'); } catch (e) { toast(e.message, true); } };
+      c.append(grid, el('button', { class: 'small', onclick: async () => { const fs = await pickFiles(true); if (fs.length) add(fs); } }, '＋ 写真を足す'),
+        el('div', { class: 'hint' }, '2列で並びます。枚数が奇数のときは1枚目が横いっぱいになります。ここに写真をドラッグしても足せます。'),
+        field(b, 'caption', 'キャプション（まとまりの下に1つ出る）', { multi: true }));
+      dropTarget(c, add);
     }
     if (b.type === 'video') {
       c.append(el('div', { class: 'photo' }, el('img', { src: '/' + b.poster, alt: '' }),
@@ -209,9 +233,19 @@
   document.getElementById('publish').onclick = async (ev) => {
     if (!confirm('サイトに公開しますか？\n押すと、今の内容が数分でネットに出ます。')) return;
     const b = ev.currentTarget; b.disabled = true; toast('公開しています…');
-    try { if (dirty) await save(); const j = await api('/api/publish', { method: 'POST' }); toast(j.message + (j.removed && j.removed.length ? `\n使っていない写真 ${j.removed.length} 枚を外しました` : '')); }
+    try { if (dirty) await save(); const j = await api('/api/publish', { method: 'POST' }); showPublished(j); }
     catch (e) { toast(e.message, true); } finally { b.disabled = false; }
   };
+  const SITE = 'https://314cmtour.github.io/irore-384d00/';
+  function showPublished(j) {
+    const t = document.getElementById('toast'); clearTimeout(t._h);
+    const url = SITE + '?v=' + Date.now().toString(36);
+    t.className = ''; t.replaceChildren(
+      document.createTextNode(j.message + (j.removed && j.removed.length ? `\n使っていない写真 ${j.removed.length} 枚を外しました` : '') + '\n公開後のアドレス：'),
+      Object.assign(document.createElement('a'), { href: url, target: '_blank', rel: 'noopener', textContent: SITE }),
+      document.createTextNode('\n（反映まで数分。リンクは古い表示を飛ばす印つき）'));
+    t.style.display = 'block'; t._h = setTimeout(() => t.style.display = 'none', 30000);
+  }
   addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
 
   (async () => {

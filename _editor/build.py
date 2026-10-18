@@ -47,6 +47,10 @@ def render_block(b):
         return section(f'      <figure class="{lay} fade">\n        <video src="{a(b["src"])}" poster="{a(b["poster"])}" muted loop playsinline preload="none" class="loop" aria-label="{a(b.get("alt", ""))}"></video>\n'
                        + (f'        <figcaption>{t(b["caption"])}</figcaption>\n' if b.get("caption", "").strip() else "")
                        + '      </figure>\n', photo=True)
+    if k == "gallery":
+        imgs = "".join(f'          <img src="{a(it["src"])}" alt="{a(it.get("alt", ""))}" loading="lazy">\n' for it in b["items"])
+        cap = f'        <figcaption>{t(b["caption"])}</figcaption>\n' if b.get("caption", "").strip() else ""
+        return section(f'      <figure class="gallery fade">\n        <div class="gal">\n{imgs}        </div>\n{cap}      </figure>\n', photo=True)
     if k == "teaser":
         return section(
             '    <figure class="teaser fade">\n'

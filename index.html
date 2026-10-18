@@ -96,6 +96,11 @@
   .r60{width:min(62%,760px);margin-left:auto}
   .c40{width:min(40%,460px);margin:0 auto}
   .pair{display:grid;grid-template-columns:1fr 1fr;gap:clamp(12px,2vw,28px)}
+  /* 写真のまとまり（1つの帯に数枚）：2列。枚数が奇数なら1枚目を横いっぱいに（2026-10-18） */
+  .gallery{width:100%;max-width:980px;margin:0 auto}
+  .gal{display:grid;grid-template-columns:1fr 1fr;gap:clamp(6px,1vw,14px)}
+  .gal img{width:100%;aspect-ratio:16/10;object-fit:cover;display:block}
+  .gal img:first-child:nth-last-child(odd){grid-column:1/-1;aspect-ratio:16/9}
   figure figcaption{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.12em;margin-top:14px}
 
   /* ティーザー：再生と全画面のミニマルな印（2026-10-18）。重なりはタップを素通しにする */
@@ -197,6 +202,19 @@
 
   <section class="band photo"><div class="wrap">
       <figure class="l60 fade"><img src="media/ph4.jpg" alt="囲炉裏を覗き込み、水面に手をかざす人" loading="lazy"><figcaption>水面に手をかざすことで、投影される内容が変わります</figcaption></figure>
+  </div></section>
+
+  <section class="band photo"><div class="wrap">
+      <figure class="gallery fade">
+        <div class="gal">
+          <img src="media/ph-20261018-160659-ceca.jpg" alt="水面に浮かび上がる言葉" loading="lazy">
+          <img src="media/ph-20261018-160700-2788.jpg" alt="水面に浮かび上がる言葉" loading="lazy">
+          <img src="media/ph-20261018-160701-f6de.jpg" alt="水面に浮かび上がる言葉" loading="lazy">
+          <img src="media/ph-20261018-160702-5938.jpg" alt="水面に浮かび上がる言葉" loading="lazy">
+          <img src="media/ph-20261018-160704-0964.jpg" alt="水面に浮かび上がる言葉" loading="lazy">
+        </div>
+        <figcaption>水底から、言葉が浮かび上がります</figcaption>
+      </figure>
   </div></section>
 
   <section class="band photo"><div class="wrap">

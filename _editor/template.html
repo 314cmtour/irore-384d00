@@ -96,6 +96,11 @@
   .r60{width:min(62%,760px);margin-left:auto}
   .c40{width:min(40%,460px);margin:0 auto}
   .pair{display:grid;grid-template-columns:1fr 1fr;gap:clamp(12px,2vw,28px)}
+  /* 写真のまとまり（1つの帯に数枚）：2列。枚数が奇数なら1枚目を横いっぱいに（2026-10-18） */
+  .gallery{width:100%;max-width:980px;margin:0 auto}
+  .gal{display:grid;grid-template-columns:1fr 1fr;gap:clamp(6px,1vw,14px)}
+  .gal img{width:100%;aspect-ratio:16/10;object-fit:cover;display:block}
+  .gal img:first-child:nth-last-child(odd){grid-column:1/-1;aspect-ratio:16/9}
   figure figcaption{font-family:var(--sans);font-size:11px;color:var(--mute);letter-spacing:.12em;margin-top:14px}
 
   /* ティーザー：再生と全画面のミニマルな印（2026-10-18）。重なりはタップを素通しにする */
