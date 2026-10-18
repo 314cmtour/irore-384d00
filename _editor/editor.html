@@ -14,6 +14,12 @@
   header{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:12px;padding:12px 20px;background:rgba(21,20,18,.94);border-bottom:1px solid var(--line);backdrop-filter:blur(6px)}
   header h1{font-size:15px;font-weight:400;letter-spacing:.12em;margin:0 auto 0 0}
   #state{font-size:12px;color:var(--mute)}
+  #vbar{position:sticky;top:57px;z-index:9;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 20px;background:rgba(30,28,25,.96);border-bottom:1px solid var(--line)}
+  #vbar .vlabel{font-size:11px;letter-spacing:.2em;color:var(--mute)}
+  #vbar select{width:auto;min-width:240px;padding:4px 8px}
+  #vnote{font-size:12px;color:var(--mute)}
+  body.draft #vbar{background:rgba(58,46,24,.96)}
+  body.draft #vnote{color:var(--accent)}
   #site{font-size:12px;color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(217,199,163,.35)}
   #site:hover{border-bottom-color:var(--accent)}
   #toast a{color:var(--accent)}
@@ -46,6 +52,8 @@
   #toast.err{border-color:var(--warn);color:var(--warn)}
   #block-msg{padding:60px 20px;text-align:center;color:var(--mute)}
   @media (max-width:640px){.photo,.row{grid-template-columns:1fr}.dt{grid-template-columns:1fr}}
+  /* iPhone：上の帯は折り返し、版の帯は固定しない（2026-10-18） */
+  @media (max-width:640px){header{flex-wrap:wrap;padding:10px 14px}header h1{flex-basis:100%}#vbar{position:static}#vbar select{min-width:0;flex:1 1 100%}main{padding:16px 12px 120px}}
 </style>
 </head>
 <body>
@@ -57,6 +65,14 @@
   <button id="save">保存</button>
   <button id="publish" class="primary">公開</button>
 </header>
+<nav id="vbar">
+  <span class="vlabel">版</span>
+  <select id="vsel"></select>
+  <button class="small" id="vnew">この版をもとに新しい版</button>
+  <button class="small" id="vren">名前を変える</button>
+  <button class="small" id="vdel">この版を消す</button>
+  <span id="vnote"></span>
+</nav>
 <main id="app"></main>
 <div id="toast"></div>
 <input type="file" id="picker" accept="image/*,.heic,.heif" multiple hidden>
@@ -77,9 +93,11 @@
   const KIND = { text: '文章', photo: '写真', gallery: '写真のまとまり（1つの帯）', video: '動画（ループ）', teaser: 'ティーザー（YouTube）', data: '作品データ' };
 
   const toast = (msg, err) => { const t = document.getElementById('toast'); t.textContent = msg; t.className = err ? 'err' : ''; t.style.display = 'block'; clearTimeout(t._h); t._h = setTimeout(() => t.style.display = 'none', err ? 9000 : 3500); };
-  const DRAFT = 'irore-draft';
-  const keepDraft = () => { try { localStorage.setItem(DRAFT, JSON.stringify(C)); } catch (e) {} };
-  const setDirty = (d) => { dirty = d; if (d) keepDraft(); else { try { localStorage.removeItem(DRAFT); } catch (e) {} } stateEl.textContent = d ? '● 保存していない変更があります' : '保存済み'; stateEl.className = d ? 'dirty' : 'ok'; };
+  let VER = sessionStorage.getItem('irore-ver') || 'live', VERS = [];
+  const vq = () => '?v=' + encodeURIComponent(VER);
+  const DRAFT_KEY = () => 'irore-draft:' + VER;
+  const keepDraft = () => { try { localStorage.setItem(DRAFT_KEY(), JSON.stringify(C)); } catch (e) {} };
+  const setDirty = (d) => { dirty = d; if (d) keepDraft(); else { try { localStorage.removeItem(DRAFT_KEY()); } catch (e) {} } stateEl.textContent = d ? '● 保存していない変更があります' : '保存済み'; stateEl.className = d ? 'dirty' : 'ok'; };
   const el = (tag, attrs = {}, ...kids) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs)) { if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else if (k === 'class') e.className = v; else e.setAttribute(k, v); } kids.flat().forEach(k => k != null && e.append(k)); return e; };
 
   async function api(path, opts = {}) {
@@ -222,18 +240,20 @@
   }
 
   async function save() {
-    await api('/api/content', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(C) });
+    await api('/api/content' + vq(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(C) });
     setDirty(false);
   }
   document.getElementById('save').onclick = async () => { try { await save(); toast('保存しました（まだ公開していません）'); } catch (e) { toast(e.message, true); } };
   document.getElementById('preview').onclick = async () => {
     const w = window.open('about:blank', '_blank');
-    try { if (dirty) await save(); w.location = '/index.html?t=' + Date.now(); } catch (e) { w.close(); toast(e.message, true); }
+    try { if (dirty) await save(); w.location = (VER === 'live' ? '/index.html' : '/preview-' + VER + '.html') + '?t=' + Date.now(); } catch (e) { w.close(); toast(e.message, true); }
   };
   document.getElementById('publish').onclick = async (ev) => {
-    if (!confirm('サイトに公開しますか？\n押すと、今の内容が数分でネットに出ます。')) return;
+    const vname = (VERS.find(v => v.id === VER) || {}).name || '';
+    if (!confirm(VER === 'live' ? 'サイトに公開しますか？\n押すと、今の内容が数分でネットに出ます。'
+      : `「${vname}」をサイトに公開しますか？\n今公開中の版は「公開していた版」として一覧に残ります。`)) return;
     const b = ev.currentTarget; b.disabled = true; toast('公開しています…');
-    try { if (dirty) await save(); const j = await api('/api/publish', { method: 'POST' }); showPublished(j); }
+    try { if (dirty) await save(); const j = await api('/api/publish' + vq(), { method: 'POST' }); showPublished(j); if (VER !== 'live') { await switchTo('live', true); } }
     catch (e) { toast(e.message, true); } finally { b.disabled = false; }
   };
   const SITE = 'https://314cmtour.github.io/irore-384d00/';
@@ -246,17 +266,48 @@
       document.createTextNode('\n（反映まで数分。リンクは古い表示を飛ばす印つき）'));
     t.style.display = 'block'; t._h = setTimeout(() => t.style.display = 'none', 30000);
   }
+  async function loadVersions() {
+    VERS = (await (await fetch('/api/versions')).json()).versions;
+    if (!VERS.some(v => v.id === VER)) VER = 'live';
+    const sel = document.getElementById('vsel');
+    sel.replaceChildren(...VERS.map(v => el('option', { value: v.id }, v.id === 'live' ? '● 公開中の版' : `${v.name}　（${v.updated}）`)));
+    sel.value = VER;
+  }
+  async function switchTo(v, force) {
+    if (!force && dirty && !confirm('保存していない変更があります。保存せずに版を切り替えますか？\n（書きかけは、その版に戻ったときに戻せます）')) { document.getElementById('vsel').value = VER; return; }
+    VER = v; sessionStorage.setItem('irore-ver', VER);
+    await loadVersions();
+    document.body.classList.toggle('draft', VER !== 'live');
+    document.getElementById('vnote').textContent = VER === 'live' ? 'いまサイトに出ている内容です' : '下書きの版です。保存してもサイトには出ません。「公開」を押すとこの版に入れ替わります';
+    document.getElementById('vren').disabled = document.getElementById('vdel').disabled = VER === 'live';
+    C = await (await fetch('/api/content' + vq())).json();
+    let draft = null; try { draft = localStorage.getItem(DRAFT_KEY()); } catch (e) {}
+    if (draft && draft !== JSON.stringify(C) && confirm('この版に、保存しないまま閉じた書きかけがあります。戻しますか？\n（「キャンセル」で書きかけを捨てます）')) { C = JSON.parse(draft); render(); setDirty(true); }
+    else { render(); setDirty(false); }
+  }
+  document.getElementById('vsel').onchange = (e) => switchTo(e.target.value).catch(err => toast(err.message, true));
+  document.getElementById('vnew').onclick = async () => {
+    const name = prompt('新しい版の名前（例：わかりやすい版）', 'わかりやすい版');
+    if (name == null) return;
+    try { if (dirty) await save(); const j = await api('/api/versions/new', { method: 'POST', body: JSON.stringify({ from: VER, name }) }); await switchTo(j.id, true); toast(`「${name}」を作りました。今の版の内容が写してあります`); }
+    catch (e) { toast(e.message, true); }
+  };
+  document.getElementById('vren').onclick = async () => {
+    const cur = (VERS.find(v => v.id === VER) || {}).name || '';
+    const name = prompt('版の名前', cur); if (!name) return;
+    try { if (dirty) await save(); await api('/api/versions/rename' + vq(), { method: 'POST', body: JSON.stringify({ name }) }); await loadVersions(); } catch (e) { toast(e.message, true); }
+  };
+  document.getElementById('vdel').onclick = async () => {
+    const cur = (VERS.find(v => v.id === VER) || {}).name || '';
+    if (!confirm(`「${cur}」を消しますか？\nこの版は元に戻せません（サイトに出ている内容には影響しません）。`)) return;
+    try { await api('/api/versions/delete' + vq(), { method: 'POST' }); try { localStorage.removeItem(DRAFT_KEY()); } catch (e) {} await switchTo('live', true); toast('消しました'); } catch (e) { toast(e.message, true); }
+  };
   addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
 
   (async () => {
     if (!TOKEN) { try { TOKEN = (await (await fetch('/api/token')).json()).token || ''; sessionStorage.setItem('irore-token', TOKEN); } catch (e) {} }
     if (!TOKEN) { app.replaceChildren(el('div', { id: 'block-msg' }, '「編集室.command」から開き直してください。')); stateEl.textContent = ''; return; }
-    try {
-      C = await (await fetch('/api/content')).json();
-      let draft = null; try { draft = localStorage.getItem(DRAFT); } catch (e) {}
-      if (draft && draft !== JSON.stringify(C) && confirm('前に保存しないまま閉じた書きかけがあります。戻しますか？\n（「キャンセル」で書きかけを捨てます）')) { C = JSON.parse(draft); render(); setDirty(true); }
-      else { render(); setDirty(false); }
-    }
+    try { await switchTo(VER, true); }
     catch (e) { app.replaceChildren(el('div', { id: 'block-msg' }, '編集室が動いていません。「編集室.command」から開き直してください。')); }
   })();
 })();
